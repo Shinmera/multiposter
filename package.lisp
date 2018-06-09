@@ -13,12 +13,17 @@
    #:*config-path*
    #:restore
    #:offload
-   #:setup)
+   #:setup
+   #:text
+   #:link
+   #:image
+   #:video)
   ;; protocol.lisp
   (:export
    #:client
    #:client-types
    #:login
+   #:post
    #:post-text
    #:post-link
    #:post-image

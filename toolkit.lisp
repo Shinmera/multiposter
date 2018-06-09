@@ -22,8 +22,8 @@
 
 (defun prompt (prompt &key (converter #'not-empty-converter) (default NIL default-p) (stream *query-io*))
   (loop
-     (format stream "~&~a~@[ [~a]~]:~%" (prefix-multiline "  " prompt) default)
-     (let ((input (read-line stream)))
+     (format stream "~&~a~:[~; [~a]~]:~%" (prefix-multiline "  " prompt) default-p default)
+     (let ((input (string-right-trim '(#\Newline) (read-line stream))))
        (cond ((and default-p (string= input ""))
               (return default))
              (T

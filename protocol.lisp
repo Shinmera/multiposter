@@ -46,20 +46,19 @@
   (:default-initargs :clients () :primary NIL))
 
 (defmethod make-load-form ((multiposter multiposter) &optional env)
-  (let ((clients (gensym "CLIENTS")))
-    `(let ((,clients (list ,@(loop for client in (clients multiposter)
-                                   collect (make-load-form client env)))))
-       (make-instance 'multiposter
-                      :clients ,clients
-                      :primary ,(when (primary multiposter)
-                                  `(elt ,clients ,(position (primary multiposter) (clients multiposter))))))))
+  `(let ((clients (list ,@(loop for client in (clients multiposter)
+                                collect (make-load-form client env)))))
+     (make-instance 'multiposter
+                    :clients clients
+                    :primary ,(when (primary multiposter)
+                                `(elt clients ,(position (primary multiposter) (clients multiposter)))))))
 
 (defmethod login ((multiposter multiposter) &rest args)
   (dolist (client (clients multiposter) multiposter)
     (with-simple-restart (continue "Continue with the next client.")
       (apply #'login client args))))
 
-(defun delegate-to (multiposter function primary &rest args)
+(defun delegate-to (multiposter function primary args)
   (cond ((primary multiposter)
          (let ((link (apply function (primary multiposter) primary args)))
            (list* link

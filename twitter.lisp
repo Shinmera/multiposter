@@ -12,6 +12,7 @@
 (in-package #:org.shirakumo.multiposter.twitter)
 
 (defvar *text-limit* 280)
+(defvar *link-length*)
 
 (defclass client (multiposter:client)
   ((api-key :initarg :api-key :accessor api-key)
@@ -45,7 +46,11 @@
                                            :default "D1pMCK17gI10bQ6orBPS0w")))
         (api-secret
           (or api-secret (multiposter:prompt "Please enter the Twitter API secret"
-                                             :default "BfkvKNRRMoBPkEtDYAAOPW4s2G9U8Z7u3KAf0dBUA"))))
+                                             :default "BfkvKNRRMoBPkEtDYAAOPW4s2G9U8Z7u3KAf0dBUA")))
+        (access-token
+          (or access-token (multiposter:prompt "Please enter the Twitter access token" :default NIL)))
+        (access-secret
+          (or access-secret (multiposter:prompt "Please enter the Twitter access secret" :default NIL))))
     (setf (api-key client) api-key)
     (setf (api-secret client) api-secret)
     (unless (and access-token access-secret)
@@ -58,16 +63,14 @@
           (setf (access-secret client) access-secret))))
     client))
 
-(defun shorten-text (text &key (limit *text-limit*)
-                               (link-length (chirp:short-url-length-https
-                                             (chirp:help/configuration))))
+(defun shorten-text (text &key (limit *text-limit*) (link-length *link-length*))
   (multiposter:limit-text-with-links text limit link-length))
 
-(defun prep-text (text tags link &key (limit *text-limit*))
+(defun prep-text (text tags link &key (limit *text-limit*) (link-length *link-length*))
   (let ((text (format NIL "~a~{ #~a~}" text tags)))
     (if link
         (format NIL "~a ~a"
-                (shorten-text text :limit (- limit 1 *link-length*))
+                (shorten-text text :limit (- limit 1 link-length))
                 link)
         (shorten-text text :limit limit))))
 
@@ -77,19 +80,23 @@
 
 (defmethod multiposter:post-text ((client client) text &key tags link)
   (with-client (client)
-    (status-url (chirp:statuses/update (prep-text text tags link)))))
+    (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration))))
+      (status-url (chirp:statuses/update (prep-text text tags link))))))
 
 (defmethod multiposter:post-link ((client client) url &key description tags)
   (with-client (client)
-    (let ((text (shorten-text (format NIL "~a~@[~%~a~]~{ #~a~}" url description tags))))
+    (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
+          (text (shorten-text (format NIL "~a~@[~%~a~]~{ #~a~}" url description tags))))
       (status-url (chirp:statuses/update text)))))
 
 (defmethod multiposter:post-image ((client client) path &key description tags link)
   (with-client (client)
-    (let ((limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
+    (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
+          (limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
       (status-url (chirp:statuses/update-with-media (prep-text description tags link :limit limit) path)))))
 
 (defmethod multiposter:post-video ((client client) path &key description tags link)
   (with-client (client)
-    (let ((limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
+    (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
+          (limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
       (status-url (chirp:statuses/update-with-media (prep-text description tags link :limit limit) path)))))
