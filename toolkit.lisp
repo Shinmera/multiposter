@@ -22,15 +22,15 @@
 
 (defun prompt (prompt &key (converter #'not-empty-converter) (default NIL default-p) (stream *query-io*))
   (loop
-     (format stream "~&~a~:[~; [~a]~]:~%" (prefix-multiline "  " prompt) default-p default)
+     (format stream "~&~a~:[~; [~a]~]:~%> " (prefix-multiline "| " prompt) default-p default)
      (let ((input (string-right-trim '(#\Newline) (read-line stream))))
        (cond ((and default-p (string= input ""))
               (return default))
              (T
               (handler-case (return (funcall converter input))
                 (error (error)
-                  (format stream "~&  Error: ~%~a" (prefix-multiline "    " error))
-                  (format stream "~&  Please try again.~%"))))))))
+                  (format stream "~&| Error: ~%~a" (prefix-multiline "|   " error))
+                  (format stream "~&| Please try again.~%> "))))))))
 
 (defparameter *url-regex*
   (cl-ppcre:create-scanner
