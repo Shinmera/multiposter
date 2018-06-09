@@ -1,0 +1,220 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="utf-8"> <title>Multiposter</title> <style>html body{margin:0 auto 0 auto;padding:20px;max-width:1024px;font-family:sans-serif;font-size:14pt;overflow-y:scroll;}html body a{text-decoration:none;}html body a[href]{color:#0055AA;}html body a[href]:hover{color:#0088EE;}html body pre{background:#FAFAFA;border:1px solid #DDDDDD;padding:0.75em;overflow-x:auto;}html body pre >code a[href]{color:#223388;}article.system h1,article.system h2,article.system h3,article.system h4,article.system h5,article.system h6{margin:0.2em 0 0.1em 0;text-indent:1em;}article.system >header{text-align:center;}article.system >header img.logo{display:block;margin:auto;max-height:170px;}article.system >header h1{display:inline-block;text-indent:0;font-size:2.5em;}article.system >header .version{vertical-align:bottom;}article.system >header .languages{margin-top:-0.5em;text-transform:capitalize;}article.system >header .description{margin:0;}article.system >header .pages{margin-top:0.5em;font-size:1.2em;text-transform:capitalize;}article.system >header .pages a{display:inline-block;padding:0 0.2em;}article.system >section{margin:1em 0 1em 0;}article.system #index >ul{list-style:none;margin:0;padding:0;}article.system .row label{display:inline-block;min-width:6em;}article.system #system .row{display:flex;}article.system #system #dependencies{display:inline;margin:0;padding:0;}article.system #system #dependencies li{display:inline;padding:0 0.2em;}article.definition{margin:1em 0 0 0;}article.definition >header h1,article.definition >header h2,article.definition >header h3,article.definition >header h4,article.definition >header h5,article.definition >header h6{text-indent:0;display:inline-block;}article.definition >header ul{display:inline-block;list-style:none;margin:0;padding:0;}article.definition >header ul li{display:inline-block;padding:0 0.2em 0 0;}article.definition >header .visibility{display:none;}article.definition >header .visibility,article.definition >header .type{text-transform:lowercase;}article.definition >header .source-link{visibility:hidden;float:right;}article.definition >header .source-link:after{visibility:visible;content:"[SRC]";}article.definition .docstring{margin:0 0 0 1em;}article.definition .docstring pre{font-size:0.8em;white-space:pre-wrap;}.definition.package >header ul.nicknames{display:inline-block;list-style:none;margin:0;padding:0 0 0 1em;}.definition.package >header ul.nicknames li{display:inline;}.definition.package >header ul.nicknames:before{content:"(";}.definition.package >header ul.nicknames:after{content:")";}.definition.package ul.definitions{margin:0;list-style:none;padding:0 0 0 0.5em;}.definition.callable >header .name:before,.definition.type >header .name:before{content:"(";font-weight:normal;}.definition.callable >header .arguments:after,.definition.type >header .arguments:after{content:")";}.definition li>mark{background:none;border-left:0.3em solid #0088EE;padding-left:0.3em;display:block;}</style> </head> <body> <article class="system"> <header>  <h1>multiposter</h1> <span class="version">1.0.0</span> <nav class="languages">  <a href="index.html">English</a>          </nav> <p class="description">A small application to post to multiple services at once.</p> <nav class="pages">  <a href="index.html">multiposter</a>    <a href="multiposter-tumblr/index.html">multiposter tumblr</a>    <a href="multiposter-twitter/index.html">multiposter twitter</a>    <a href="multiposter-mastodon/index.html">multiposter mastodon</a>    <a href="multiposter-git/index.html">multiposter git</a>  </nav> </header> <section id="documentation"><h2>About Multiposter</h2> <p>This is a protocol and small application to allow posting content to multiple providers at once.</p> <h2>How To</h2> <p>Load the providers you want:</p> <pre><code>(ql:quickload '(multiposter-twitter multiposter-mastodon multiposter-tumblr multiposter-git))
+</code></pre> <p>And set them up:</p> <pre><code>(<a href="#FUNCTION%20MULTIPOSTER%3ASETUP" class="xref">multiposter:setup</a>)
+</code></pre> <p>This will prompt you for a bunch of information for each client. By default it will create a client for each type that you loaded. </p> <p>It's necessary to note that one client (potentially at random) will be picked as the &quot;primary&quot; client. This means that a post on every other client will contain a link to the post of the primary client. If you would like to set another client to be the primary, you can pass a different list:</p> <pre><code>(<a href="#FUNCTION%20MULTIPOSTER%3ASETUP" class="xref">multiposter:setup</a> :clients '(multiposter-tumblr:client multiposter-twitter:client ..))
+</code></pre> <p>The first one in the list will be picked as the primary. If you do not want any primary at all, you can set it to NIL explicitly.</p> <pre><code>(setf (<a href="#GENERIC-FUNCTION%20MULTIPOSTER%3A%28SETF%20PRIMARY%29" class="xref">multiposter:primary</a> <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">multiposter:*client*</a>) NIL)
+</code></pre> <p>When you set the client up, it will automatically persist all the necessary login information to a configuration file at <code><a href="#VARIABLE%20MULTIPOSTER%3A%2ACONFIG-PATH%2A" class="xref">*config-path*</a></code>. In future sessions, you can simply call <code><a href="#FUNCTION%20MULTIPOSTER%3ARESTORE" class="xref">restore</a></code> to get the settings back.</p> <p>To actually post to the configured services, simply call one of the related functions, <code><a href="#FUNCTION%20MULTIPOSTER%3ATEXT" class="xref">text</a></code> <code><a href="#FUNCTION%20MULTIPOSTER%3ALINK" class="xref">link</a></code> <code><a href="#FUNCTION%20MULTIPOSTER%3AIMAGE" class="xref">image</a></code> <code><a href="#FUNCTION%20MULTIPOSTER%3AVIDEO" class="xref">video</a></code>:</p> <pre><code>(<a href="#FUNCTION%20MULTIPOSTER%3AIMAGE" class="xref">multiposter:image</a> #p&quot;~/meat.jpg&quot; :description &quot;Some meat.&quot; :tags '(&quot;meat&quot;))
+</code></pre> <p>And that's pretty much it. Note that for services that do not support tags as metadata, or enforce limits on the textual content, Multiposter will attempt to be as smart as possible and shorten or convert things in a sensible manner. It is for this reason too that using a primary client that does not restrict things is a good idea.</p> <h2>Creating New Clients</h2> <p>If there's an additional service you would like to add support for, you can make use of Multiposter's posting protocol. The first step is to create a subclass of <code><a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">client</a></code>.</p> <pre><code>(<a href="http://l1sp.org/cl/defclass" class="xref">defclass</a> client (multiposter:client) ())
+</code></pre> <p>Next you will need a method on <code><a href="#GENERIC-FUNCTION%20MULTIPOSTER%3AMAKE-LOAD-FORM" class="xref">make-load-form</a></code>. This is used to persist the client's settings.</p> <pre><code>(<a href="http://l1sp.org/cl/defmethod" class="xref">defmethod</a> <a href="http://l1sp.org/cl/make-load-form" class="xref">make-load-form</a> ((client <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">client</a>) &amp;optional env)
+  (declare (ignore env))
+  `(make-instance 'client ...))
+</code></pre> <p>Another important part of the protocol is the <code><a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ALOGIN" class="xref">login</a></code> function, which takes care of the authentication during the initial <code><a href="#FUNCTION%20MULTIPOSTER%3ASETUP" class="xref">setup</a></code>. The function accepts arbitrary keywords, which you should use to allow the user to potentially provide default values. For anything that is not specified, use <code><a href="#FUNCTION%20MULTIPOSTER%3APROMPT" class="xref">prompt</a></code> to ask the user interactively.</p> <pre><code>(<a href="http://l1sp.org/cl/defmethod" class="xref">defmethod</a> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ALOGIN" class="xref">multiposter:login</a> ((client <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">client</a>) &amp;key some-prop)
+  (let ((some-prop (<a href="http://l1sp.org/cl/or" class="xref">or</a> some-prop (<a href="#FUNCTION%20MULTIPOSTER%3APROMPT" class="xref">multiposter:prompt</a> &quot;Please enter some prop&quot;))))
+    (<a href="http://l1sp.org/cl/setf" class="xref">setf</a> (some-prop client) some-prop)
+    ...))
+</code></pre> <p>Finally you'll need methods on <code><a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-TEXT" class="xref">post-text</a></code>, <code><a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-LINK" class="xref">post-link</a></code>, <code><a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-IMAGE" class="xref">post-image</a></code>, and <code><a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-VIDEO" class="xref">post-video</a></code> that perform the actual posting. You should take care to post as much of the provided information as possible and to only cut content if necessary.</p> </section>  <section id="system"> <h2>System Information</h2>  <div class="row"> <label for="version">Version:</label> <a id="version">1.0.0</a> </div>   <div class="row"> <label for="dependencies">Dependencies:</label> <ul id="dependencies"><li><a class="external">cl-ppcre</a></li><li><a class="external" href="https://github.com/Shinmera/documentation-utils">documentation-utils</a></li></ul> </div>   <div class="row"> <label for="author">Author:</label> <a id="author" href="mailto:shinmera@tymoon.eu">Nicolas Hafner</a> </div>   <div class="row"> <label for="license">License:</label> <a id="license" href="https://github.com/Shinmera/multiposter/blob/master/LICENSE">Artistic</a> </div>   <div class="row"> <label for="homepage">Homepage:</label> <a id="homepage" href="https://github.com/Shinmera/multiposter">https://github.com/Shinmera/multiposter</a> </div>  </section>  <section id="index"> <h2>Definition Index</h2> <ul> <li> <article class="definition package" id="PACKAGE MULTIPOSTER"> <header> <h3> <a href="#PACKAGE%20MULTIPOSTER">MULTIPOSTER</a> </h3> <ul class="nicknames"> <li>ORG.SHIRAKUMO.MULTIPOSTER</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/package.lisp#L7">Source</a>  </header> <div class="docstring"><i>No documentation provided.</i></div> <ul class="definitions"> <li> <article class="definition special-variable NIL" id="VARIABLE MULTIPOSTER:*CLIENT*"> <header> <span class="visibility">EXTERNAL</span> <span class="type">SPECIAL-VARIABLE</span> <h4 class="name"> <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A">*CLIENT*</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"></ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L9">Source</a>  </header> <div class="docstring"><pre>This variable keeps the current client instance for convenient posting.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3ARESTORE" class="xref">RESTORE</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3AOFFLOAD" class="xref">OFFLOAD</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3ASETUP" class="xref">SETUP</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3ATEXT" class="xref">TEXT</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3ALINK" class="xref">LINK</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3AIMAGE" class="xref">IMAGE</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3AVIDEO" class="xref">VIDEO</a></pre></div> </article> </li>  <li> <article class="definition special-variable NIL" id="VARIABLE MULTIPOSTER:*CONFIG-PATH*"> <header> <span class="visibility">EXTERNAL</span> <span class="type">SPECIAL-VARIABLE</span> <h4 class="name"> <a href="#VARIABLE%20MULTIPOSTER%3A%2ACONFIG-PATH%2A">*CONFIG-PATH*</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"></ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L10">Source</a>  </header> <div class="docstring"><pre>This variable holds the default path for the configuration file.
+
+If XDG_CONFIG_HOME is set, it is:
+  XDG_CONFIG_HOME/multiposter/client.lisp
+If the system is Windows, it is:
+  ~/AppData/Local/multiposter/client.lisp
+Otherwise, it is:
+  ~/.config/multiposter/client.lisp</pre></div> </article> </li>  <li> <article class="definition class NIL" id="CLASS MULTIPOSTER:CLIENT"> <header> <span class="visibility">EXTERNAL</span> <span class="type">CLASS</span> <h4 class="name"> <a href="#CLASS%20MULTIPOSTER%3ACLIENT">CLIENT</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"></ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L12">Source</a>  </header> <div class="docstring"><pre>Superclass for all clients that can post using this protocol.
+
+Clients must implement methods for the following functions:
+  LOGIN POST-TEXT POST-LINK POST-IMAGE POST-VIDEO
+
+See <a href="#FUNCTION%20MULTIPOSTER%3ACLIENT-TYPES" class="xref">CLIENT-TYPES</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ALOGIN" class="xref">LOGIN</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST" class="xref">POST</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-TEXT" class="xref">POST-TEXT</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-LINK" class="xref">POST-LINK</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-IMAGE" class="xref">POST-IMAGE</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-VIDEO" class="xref">POST-VIDEO</a></pre></div> </article> </li>  <li> <article class="definition class NIL" id="CLASS MULTIPOSTER:MULTIPOSTER"> <header> <span class="visibility">EXTERNAL</span> <span class="type">CLASS</span> <h4 class="name"> <a href="#CLASS%20MULTIPOSTER%3AMULTIPOSTER">MULTIPOSTER</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"></ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L43">Source</a>  </header> <div class="docstring"><pre>Base class for the aggregation of multiple clients into one.
+
+Simply delegates the posting functions to the respective clients and
+makes sure that each client refers to the post of the primary client
+if a primary client has been set.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APRIMARY" class="xref">PRIMARY</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ACLIENTS" class="xref">CLIENTS</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:CLIENT-TYPES"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3ACLIENT-TYPES">CLIENT-TYPES</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"></ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L15">Source</a>  </header> <div class="docstring"><pre>Returns a list of known subclasses of CLIENT.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3ASETUP" class="xref">SETUP</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:EXTRACT-LINKS"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3AEXTRACT-LINKS">EXTRACT-LINKS</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">TEXT</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/toolkit.lisp#L39">Source</a>  </header> <div class="docstring"><pre>Extracts all the links from the text.
+
+This returns a list of the following structure:
+
+  PARTS ::= PART*
+  PART  ::= string | LINK
+  LINK  ::= (:link string)
+
+This is useful for systems where links are transformed independent
+of the rest of the text. Only HTTP/S links are recognised, but the
+protocol can be absent from a link.</pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:IMAGE"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3AIMAGE">IMAGE</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">PATH</li>  <li class="argument">&amp;KEY</li>  <li class="argument">(CLIENT *CLIENT*)</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L54">Source</a>  </header> <div class="docstring"><pre>Shorthand to post a new image.
+
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-IMAGE" class="xref">POST-IMAGE</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:LIMIT-TEXT-WITH-LINKS"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3ALIMIT-TEXT-WITH-LINKS">LIMIT-TEXT-WITH-LINKS</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">TEXT</li>  <li class="argument">LIMIT</li>  <li class="argument">LINK-LENGTH</li>  <li class="argument">&amp;KEY</li>  <li class="argument">(CUTOFF 20)</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/toolkit.lisp#L49">Source</a>  </header> <div class="docstring"><pre>Truncate the length of a text intelligently.
+
+This is useful for services where links are shortened and thus do
+not constitute the full length to the text's length. The returned
+string should not contain any truncated links. If a truncation
+must happen, it will cut before the last character or newline if
+this character is no farther than CUTOFF many characters from the
+necessary end of the string.
+
+This heuristic is not perfect, especially in a multilingual
+context, but it should provide a good effort.
+
+See <a href="#FUNCTION%20MULTIPOSTER%3AEXTRACT-LINKS" class="xref">EXTRACT-LINKS</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:LINK"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3ALINK">LINK</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">URL</li>  <li class="argument">&amp;KEY</li>  <li class="argument">(CLIENT *CLIENT*)</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L51">Source</a>  </header> <div class="docstring"><pre>Shorthand to post a new link.
+
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-LINK" class="xref">POST-LINK</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:OFFLOAD"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3AOFFLOAD">OFFLOAD</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">&amp;OPTIONAL</li>  <li class="argument">(PATH *CONFIG-PATH*)</li>  <li class="argument">(CLIENT *CLIENT*)</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L23">Source</a>  </header> <div class="docstring"><pre>Save the client to the configuration file.
+
+Simply writes the client's make-load-form to the file.
+Returns the client.
+
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACONFIG-PATH%2A" class="xref">*CONFIG-PATH*</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:PROMPT"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3APROMPT">PROMPT</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">PROMPT</li>  <li class="argument">&amp;KEY</li>  <li class="argument">(CONVERTER #'NOT-EMPTY-CONVERTER)</li>  <li class="argument">(DEFAULT NIL DEFAULT-P)</li>  <li class="argument">(STREAM *QUERY-IO*)</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/toolkit.lisp#L23">Source</a>  </header> <div class="docstring"><pre>Prompt the user for some information.
+
+Writes a prompt for PROMPT to the given stream, defaulting to
+*QUERY-IO*. It then reads a line from this same stream. If a
+DEFAULT is given, and the line is empty, then the default is
+returned. Otherwise, the CONVERTER is called with the line. If
+the converter signals an error, the error is written to the stream
+and the user is asked again. Otherwise, the value returned by the
+converter is returned.
+
+By default a converter is used that simply checks that the string
+is not empty.</pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:RESTORE"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3ARESTORE">RESTORE</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">&amp;OPTIONAL</li>  <li class="argument">(PATH *CONFIG-PATH*)</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L17">Source</a>  </header> <div class="docstring"><pre>Load the client from the configuration file.
+
+Simply LOADs the given path if it exists and returns *client*.
+
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACONFIG-PATH%2A" class="xref">*CONFIG-PATH*</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:SETUP"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3ASETUP">SETUP</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">&amp;KEY</li>  <li class="argument">(CLIENTS (CLIENT-TYPES))</li>  <li class="argument">(PATH *CONFIG-PATH*)</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L36">Source</a>  </header> <div class="docstring"><pre>Constructs a new multiposter client and performs a login.
+
+On successful login, the client is OFFLOADed, the *CONFIG-PATH*
+and *CLIENT* variables are set, and the client is returned.
+The clients list can be a list of class names, class instances,
+or CLIENT instances. The first client in the list is picked as
+the multiposter client's primary client.
+
+See <a href="#FUNCTION%20MULTIPOSTER%3ACLIENT-TYPES" class="xref">CLIENT-TYPES</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ALOGIN" class="xref">LOGIN</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3AOFFLOAD" class="xref">OFFLOAD</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACONFIG-PATH%2A" class="xref">*CONFIG-PATH*</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:TEXT"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3ATEXT">TEXT</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">TEXT</li>  <li class="argument">&amp;KEY</li>  <li class="argument">(CLIENT *CLIENT*)</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L48">Source</a>  </header> <div class="docstring"><pre>Shorthand to post a new text update.
+
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-TEXT" class="xref">POST-TEXT</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a></pre></div> </article> </li>  <li> <article class="definition function callable" id="FUNCTION MULTIPOSTER:VIDEO"> <header> <span class="visibility">EXTERNAL</span> <span class="type">FUNCTION</span> <h4 class="name"> <a href="#FUNCTION%20MULTIPOSTER%3AVIDEO">VIDEO</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">PATH</li>  <li class="argument">&amp;KEY</li>  <li class="argument">(CLIENT *CLIENT*)</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/interface.lisp#L57">Source</a>  </header> <div class="docstring"><pre>Shorthand to post a new video.
+
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-VIDEO" class="xref">POST-VIDEO</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2ACLIENT%2A" class="xref">*CLIENT*</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:CLIENTS"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ACLIENTS">CLIENTS</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">OBJECT</li> </ul>  </header> <div class="docstring"><pre>Accessor to the list of client instances in the multiposter.
+
+See <a href="#CLASS%20MULTIPOSTER%3AMULTIPOSTER" class="xref">MULTIPOSTER</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:(SETF CLIENTS)"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3A%28SETF%20CLIENTS%29">(SETF CLIENTS)</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">NEW-VALUE</li>  <li class="argument">OBJECT</li> </ul>  </header> <div class="docstring"><i>No documentation provided.</i></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:LOGIN"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3ALOGIN">LOGIN</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">CLIENT</li>  <li class="argument">&amp;KEY</li>  <li class="argument">REPOSITORY</li>  <li class="argument">BASE</li>  <li class="argument">KEY</li>  <li class="argument">SECRET</li>  <li class="argument">ACCESS-TOKEN</li>  <li class="argument">API-KEY</li>  <li class="argument">API-SECRET</li>  <li class="argument">ACCESS-SECRET</li>  <li class="argument">BLOG</li>  <li class="argument">&amp;ALLOW-OTHER-KEYS</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L20">Source</a>  </header> <div class="docstring"><pre>Performs the login and setup sequence for the given client.
+
+The client may specify custom keyword arguments that can be used
+to provide default settings. Any missing settings will be
+interactively queries from the user.
+
+Returns the client instance on success.
+Must signal an error on failure.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:POST"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST">POST</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">CLIENT</li>  <li class="argument">THING</li>  <li class="argument">&amp;KEY</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L21">Source</a>  </header> <div class="docstring"><pre>Post a thing using the given client.
+
+By default this delegates to the specific functions based on a
+heuristic analysis of the thing.
+
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-TEXT" class="xref">POST-TEXT</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-LINK" class="xref">POST-LINK</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-IMAGE" class="xref">POST-IMAGE</a>
+See <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-VIDEO" class="xref">POST-VIDEO</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2AIMAGE-TYPES%2A" class="xref">*IMAGE-TYPES*</a>
+See <a href="#VARIABLE%20MULTIPOSTER%3A%2AVIDEO-TYPES%2A" class="xref">*VIDEO-TYPES*</a>
+See <a href="#FUNCTION%20MULTIPOSTER%3AEXTRACT-LINKS" class="xref">EXTRACT-LINKS</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:POST-IMAGE"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-IMAGE">POST-IMAGE</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">CLIENT</li>  <li class="argument">PATH</li>  <li class="argument">&amp;KEY</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L24">Source</a>  </header> <div class="docstring"><pre>Posts a new image update to the client.
+
+Depending on the client the text may contain markup and links.
+Depending on the client the description or tags might be cut short.
+If LINK is provided, the update must include the full link.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:POST-LINK"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-LINK">POST-LINK</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">CLIENT</li>  <li class="argument">URL</li>  <li class="argument">&amp;KEY</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L23">Source</a>  </header> <div class="docstring"><pre>Posts a new link update to the client.
+
+Depending on the client the text may contain markup and links.
+Depending on the client the description or tags might be cut short.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:POST-TEXT"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-TEXT">POST-TEXT</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">CLIENT</li>  <li class="argument">TEXT</li>  <li class="argument">&amp;KEY</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L22">Source</a>  </header> <div class="docstring"><pre>Posts a new textual update to the client.
+
+Depending on the client the text may contain markup and links.
+Depending on the client the text or tags might be cut short.
+If LINK is provided, the update must include the full link.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:POST-VIDEO"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APOST-VIDEO">POST-VIDEO</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">CLIENT</li>  <li class="argument">PATH</li>  <li class="argument">&amp;KEY</li>  <li class="argument">DESCRIPTION</li>  <li class="argument">TAGS</li>  <li class="argument">LINK</li> </ul>  <a class="source-link" href="https://github.com/Shinmera/multiposter/blob/master/protocol.lisp#L25">Source</a>  </header> <div class="docstring"><pre>Posts a new image update to the client.
+
+Depending on the client the text may contain markup and links.
+Depending on the client the description or tags might be cut short.
+If LINK is provided, the update must include the full link.
+
+See <a href="#CLASS%20MULTIPOSTER%3ACLIENT" class="xref">CLIENT</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:PRIMARY"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3APRIMARY">PRIMARY</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">OBJECT</li> </ul>  </header> <div class="docstring"><pre>Accessor to the primary client of the multiposter.
+
+See <a href="#CLASS%20MULTIPOSTER%3AMULTIPOSTER" class="xref">MULTIPOSTER</a></pre></div> </article> </li>  <li> <article class="definition generic-function callable" id="GENERIC-FUNCTION MULTIPOSTER:(SETF PRIMARY)"> <header> <span class="visibility">EXTERNAL</span> <span class="type">GENERIC-FUNCTION</span> <h4 class="name"> <a href="#GENERIC-FUNCTION%20MULTIPOSTER%3A%28SETF%20PRIMARY%29">(SETF PRIMARY)</a> </h4> <ul class="qualifiers"></ul> <ul class="arguments"> <li class="argument">NEW-VALUE</li>  <li class="argument">OBJECT</li> </ul>  </header> <div class="docstring"><i>No documentation provided.</i></div> </article> </li> </ul> </article> </li> </ul> </section> </article> <script>window.addEventListener("DOMContentLoaded", function(){
+    var unmarkElement = function(el){
+        if(el.tagName === "mark" || el.tagName === "MARK"){
+            [].forEach.call(el.childNodes, function(child){
+                el.parentNode.insertBefore(child, el);
+            });
+            el.parentNode.removeChild(el);
+        }else if(el.parentNode.tagName === "mark"){
+            return unmarkElement(el.parentNode);
+        }
+        return null;
+    }
+
+    var unmarkAll = function(root){
+        root = root || document;
+        [].forEach.call(root.querySelectorAll("mark"), unmarkElement);
+    }
+    
+    var markElement = function(el){
+        if(el.parentNode.tagName === "mark" || el.parentNode.tagName === "MARK"){
+            return el.parentNode;
+        } else {
+            unmarkAll();
+            var marked = document.createElement("mark");
+            el.parentNode.insertBefore(marked, el);
+            marked.appendChild(el);
+            return marked;
+        }
+    }
+
+    var markFragmented = function(){
+        if(window.location.hash){
+            var el = document.getElementById(decodeURIComponent(window.location.hash.substr(1)));
+            if(el) markElement(el);
+        }
+    }
+
+    var registerXrefLink = function(link){
+        var el = document.getElementById(decodeURIComponent(link.getAttribute("href").substr(1)));
+        if(el){
+            link.addEventListener("click", function(){
+                markElement(el);
+            });
+        }
+    }
+
+    var registerXrefLinks = function(root){
+        root = root || document;
+        [].forEach.call(root.querySelectorAll("a.xref"), registerXrefLink);
+    }
+
+    markFragmented();
+    registerXrefLinks();
+}); </script> </body> </html> 
