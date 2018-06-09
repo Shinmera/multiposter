@@ -8,8 +8,11 @@
 
 (defvar *client* NIL)
 (defvar *config-path*
-  #+unix #p"~/.config/multiposter/client.lisp"
-  #+win32 #p"~/AppData/Local/multiposter/client.lisp")
+  (merge-pathnames "multiposter/client.lisp"
+                   (or (let ((config (uiop:getenv "XDG_CONFIG_HOME")))
+                         (when (and config (string/= "" config)) config))
+                       #+(or win win32 windows) #p"~/AppData/Local/"
+                       #p"~/.config/")))
 
 (defun restore (&optional (path *config-path*))
   (when (probe-file path)

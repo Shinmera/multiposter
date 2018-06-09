@@ -46,7 +46,7 @@
     (push (subseq text pend) parts)
     (nreverse parts)))
 
-(defun limit-text-with-links (text limit link-length)
+(defun limit-text-with-links (text limit link-length &key (cutoff 20))
   (with-output-to-string (out)
     (let ((parts (extract-links text)))
       (loop with length = 0
@@ -59,6 +59,7 @@
                       (when (stringp part)
                         (let ((space (or (position #\Space part :from-end T :end (- limit length))
                                          (position #\Linefeed part :from-end T :end (- limit length)))))
-                          (when space
-                            (write-string (subseq part 0 space) out))))
+                          (if (and space (< (- limit length space) cutoff))
+                              (write-string part out :end space)
+                              (write-string part out :end (- limit length)))))
                       (return)))))))
