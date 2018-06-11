@@ -77,7 +77,7 @@
         collect (apply #'post-link client url args)))
 
 (defmethod post-image ((multiposter multiposter) path &rest args)
-  (delegate-to multiposter #'post-image path args))
+  (delegate-to multiposter #'post-image (pathname path) args))
 
 (defmethod post-video ((multiposter multiposter) path &rest args)
-  (delegate-to multiposter #'post-video path args))
+  (delegate-to multiposter #'post-video (pathname path) args))
