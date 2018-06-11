@@ -66,8 +66,14 @@
 (defun shorten-text (text &key (limit *text-limit*) (link-length *link-length*))
   (multiposter:limit-text-with-links text limit link-length))
 
+(defun prep-tag (tag)
+  (with-output-to-string (out)
+    (loop for char across tag
+          do (unless (find char "!$%^&*+.,[](){} ")
+               (write-char char out)))))
+
 (defun prep-text (text tags link &key (limit *text-limit*) (link-length *link-length*))
-  (let ((text (format NIL "~a~{ #~a~}" text tags)))
+  (let ((text (format NIL "~a~{ #~a~}" text (mapcar #'prep-tag tags))))
     (if link
         (format NIL "~a ~a"
                 (shorten-text text :limit (- limit 1 link-length))
