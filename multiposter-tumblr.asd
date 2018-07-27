@@ -14,4 +14,5 @@
   :serial T
   :components ((:file "tumblr"))
   :depends-on (:multiposter
+               :north-dexador
                :humbler))

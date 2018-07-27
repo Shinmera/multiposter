@@ -11,33 +11,23 @@
    #:client))
 (in-package #:org.shirakumo.multiposter.tumblr)
 
-(defclass client (multiposter:client)
-  ((api-key :initarg :api-key :accessor api-key)
-   (api-secret :initarg :api-secret :accessor api-secret)
-   (access-token :initarg :access-token :accessor access-token)
-   (access-secret :initarg :access-secret :accessor access-secret)
-   (blog :initarg :blog :accessor blog))
+(defclass client (multiposter:client humbler:client)
+  ((blog :initarg :blog :accessor blog))
   (:default-initargs
-   :api-key NIL
-   :api-secret NIL
-   :access-token NIL
-   :access-secret NIL
    :blog NIL))
 
 (defmethod make-load-form ((client client) &optional env)
   (declare (ignore env))
   `(make-instance 'client
-                  :api-key ,(api-key client)
-                  :api-secret ,(api-secret client)
-                  :access-token ,(access-token client)
-                  :access-secret ,(access-secret client)
+                  :key ,(north:key client)
+                  :secret ,(north:secret client)
+                  :access-token ,(north:token client)
+                  :access-secret ,(north:token-secret client)
                   :blog ,(blog client)))
 
 (defmacro with-client ((client) &body body)
-  `(let ((south:*oauth-api-key* (api-key ,client))
-         (south:*oauth-api-secret* (api-secret ,client))
-         (south:*oauth-access-token* (access-token ,client))
-         (south:*oauth-access-secret* (access-secret ,client)))
+  `(let ((humbler:*client* ,client)
+         (humbler:*user* NIL))
      ,@body))
 
 (defmethod multiposter:login ((client client) &key api-key api-secret blog access-token access-secret)
@@ -51,18 +41,14 @@
           (or access-secret (multiposter:prompt "Please enter the Tumblr access secret" :default NIL)))
         (blog
           (or blog (multiposter:prompt "Please enter the blog to post to" :default :detect))))
-    (setf (api-key client) api-key)
-    (setf (api-secret client) api-secret)
-    (setf (access-token client) access-token)
-    (setf (access-secret client) access-secret)
+    (setf (north:key client) api-key)
+    (setf (north:secret client) api-secret)
+    (setf (north:token client) access-token)
+    (setf (north:token-secret client) access-secret)
     (unless (and access-token access-secret)
-      (let* (south:*oauth-access-token* south:*oauth-access-secret*
-             south:*oauth-api-key* south:*oauth-api-secret*
-             (url (south:initiate-authentication :api-key api-key :api-secret api-secret)))
+      (let ((url (humbler:login client)))
         (multiposter:prompt (format NIL "Please visit~%  ~a~%and hit return when complete." url)
-                            :converter #'identity)
-        (setf (access-token client) south:*oauth-access-token*)
-        (setf (access-secret client) south:*oauth-access-secret*)))
+                            :converter #'identity)))
     (setf (blog client) (if (eql blog :detect)
                             (with-client (client)
                               (humbler:name (humbler:myself)))
