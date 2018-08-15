@@ -4,7 +4,7 @@ This is a protocol and small application to allow posting content to multiple pr
 ## How To
 Load the providers you want:
 
-    (ql:quickload '(multiposter-twitter multiposter-mastodon multiposter-tumblr multiposter-git))
+    (ql:quickload '(multiposter-twitter multiposter-mastodon multiposter-tumblr multiposter-studio multiposter-git))
 
 And set them up:
 
