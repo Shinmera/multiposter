@@ -45,17 +45,17 @@
     (setf *config-path* path)
     (setf *client* client)))
 
-(defun text (text &key (client *client*) tags link)
-  (post-text client text :tags tags :link link))
+(defun text (text &key (client *client*) tags link title)
+  (post-text client text :tags tags :link link :title title))
 
-(defun link (url &key (client *client*) description tags)
-  (post-link client url :description description :tags tags))
+(defun link (url &key (client *client*) title description tags)
+  (post-link client url :title title :description description :tags tags))
 
-(defun image (path &key (client *client*) description tags link)
-  (post-image client path :description description :tags tags :link link))
+(defun image (path &key (client *client*) title description tags link)
+  (post-image client path :title title :description description :tags tags :link link))
 
-(defun video (path &key (client *client*) description tags link)
-  (post-video client path :description description :tags tags :link link))
+(defun video (path &key (client *client*) title description tags link)
+  (post-video client path :title title :description description :tags tags :link link))
 
 (defmethod post ((client (eql T)) thing &rest args)
   (apply #'post *client* thing args))

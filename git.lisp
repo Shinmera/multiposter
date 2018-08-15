@@ -30,15 +30,15 @@
 (defmethod multiposter:post-link ((client client) text &rest args)
   (declare (ignore args)))
 
-(defun post-file (client path &key description tags link)
+(defun post-file (client path &key title description tags link)
   (let* ((repository (repository client))
          (path (uiop:truenamize path))
          (repo (uiop:truenamize (legit:location repository))))
     (when (uiop:subpathp path repo)
       (legit:pull repository)
       (legit:add repository (uiop:enough-pathname path repo))
-      (legit:commit repository (format NIL "~a~@[~&~%Tags:~{ ~a~}~]~@[~%URL: ~a~]"
-                                       description tags link))
+      (legit:commit repository (format NIL "~@[~a~%~%~]~a~@[~&~%Tags:~{ ~a~}~]~@[~%URL: ~a~]"
+                                       title description tags link))
       (legit:push repository)
       (format NIL "file://~a" path))))
 

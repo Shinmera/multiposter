@@ -18,27 +18,27 @@
            (find-class 'client))))
 
 (defgeneric login (client &key &allow-other-keys))
-(defgeneric post (client thing &key description tags link))
+(defgeneric post (client thing &key title description tags link))
 (defgeneric post-text (client text &key tags link))
-(defgeneric post-link (client url &key description tags))
-(defgeneric post-image (client path &key description tags link))
-(defgeneric post-video (client path &key description tags link))
+(defgeneric post-link (client url &key title description tags))
+(defgeneric post-image (client path &key title description tags link))
+(defgeneric post-video (client path &key title description tags link))
 
-(defmethod post (client (path pathname) &key description tags link)
+(defmethod post (client (path pathname) &key title description tags link)
   (cond ((find (pathname-type path) *image-types* :test #'string-equal)
-         (post-image client path :link link :tags tags :description description))
+         (post-image client path :link link :tags tags :title title :description description))
         ((find (pathname-type path) *video-types* :test #'string-equal)
-         (post-video client path :link link :tags tags :description description))
+         (post-video client path :link link :tags tags :title title :description description))
         (T
          (error "Unknown file type: ~s" (pathname-type path)))))
 
-(defmethod post (client (thing string) &key description tags link)
+(defmethod post (client (thing string) &key title description tags link)
   (let ((links (extract-links thing)))
     (cond ((and (null (cdr links))
                 (eql :link (caar links)))
-           (post-link client thing :tags tags :description description))
+           (post-link client thing :tags tags :title title :description description))
           (T
-           (post-text client thing :tags tags :link link)))))
+           (post-text client thing :tags tags :link link :title title)))))
 
 (defclass multiposter (client)
   ((clients :initarg :clients :accessor clients)

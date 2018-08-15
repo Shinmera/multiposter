@@ -51,15 +51,15 @@
                 link)
         (shorten-text text))))
 
-(defmethod multiposter:post-text ((client client) text &key tags link)
-  (tooter:url (tooter:make-status client (prep-text text tags link))))
+(defmethod multiposter:post-text ((client client) text &key title tags link)
+  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]~a" title text) tags link))))
 
-(defmethod multiposter:post-link ((client client) url &key description tags)
-  (let ((text (shorten-text (format NIL "~a~@[~%~a~]~{ #~a~}" url description tags))))
+(defmethod multiposter:post-link ((client client) url &key title description tags)
+  (let ((text (shorten-text (format NIL "~a~@[~a~%~]~@[~%~a~]~{ #~a~}" url title description tags))))
     (tooter:url (tooter:make-status client text))))
 
-(defmethod multiposter:post-image ((client client) path &key description tags link)
-  (tooter:url (tooter:make-status client (prep-text description tags link) :media path)))
+(defmethod multiposter:post-image ((client client) path &key title description tags link)
+  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]" title description) tags link) :media path)))
 
-(defmethod multiposter:post-video ((client client) path &key description tags link)
-  (tooter:url (tooter:make-status client (prep-text description tags link) :media path)))
+(defmethod multiposter:post-video ((client client) path &key title description tags link)
+  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]" title description) tags link) :media path)))

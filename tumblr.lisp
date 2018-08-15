@@ -58,29 +58,29 @@
 (defun post-url (client post-id)
   (format NIL "https://~a.tumblr.com/post/~a" (blog client) post-id))
 
-(defmethod multiposter:post-text ((client client) text &key tags link)
+(defmethod multiposter:post-text ((client client) text &key title tags link)
   (with-client (client)
     (post-url client
               (humbler:blog/post-text (blog client) (format NIL "~a~@[~&~%~a~]" text link)
-                                      :tags tags :format :markdown :tweet :off))))
+                                      :title title :tags tags :format :markdown :tweet :off))))
 
-(defmethod multiposter:post-link ((client client) url &key description tags)
+(defmethod multiposter:post-link ((client client) url &key title description tags)
   (with-client (client)
     (post-url client
               (humbler:blog/post-link (blog client) url
-                                      :description description
+                                      :description description :title title
                                       :tags tags :format :markdown :tweet :off))))
 
-(defmethod multiposter:post-image ((client client) path &key description tags link)
+(defmethod multiposter:post-image ((client client) path &key title description tags link)
   (with-client (client)
     (post-url client
               (humbler:blog/post-photo (blog client) path
-                                       :caption (format NIL "~a~@[~&~%~a~]" description link)
+                                       :caption (format NIL "~@[~a~%~]~a~@[~&~%~a~]" title description link)
                                        :link link :tags tags :format :markdown :tweet :off))))
 
-(defmethod multiposter:post-video ((client client) path &key description tags link)
+(defmethod multiposter:post-video ((client client) path &key title description tags link)
   (with-client (client)
     (post-url client
               (humbler:blog/post-video (blog client) path
-                                       :caption (format NIL "~a~@[~&~%~a~]" description link)
+                                       :caption (format NIL "~@[~a~%~]~a~@[~&~%~a~]" title description link)
                                        :tags tags :format :markdown :tweet :off))))

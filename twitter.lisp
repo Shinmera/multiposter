@@ -84,25 +84,25 @@
   (format NIL "https://twitter.com/~a/status/~a"
           (chirp:screen-name (chirp:user status)) (chirp:id status)))
 
-(defmethod multiposter:post-text ((client client) text &key tags link)
+(defmethod multiposter:post-text ((client client) text &key title tags link)
   (with-client (client)
     (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration))))
-      (status-url (chirp:statuses/update (prep-text text tags link))))))
+      (status-url (chirp:statuses/update (prep-text (format NIL "~@[~a~%~]~a" title text) tags link))))))
 
-(defmethod multiposter:post-link ((client client) url &key description tags)
+(defmethod multiposter:post-link ((client client) url &key title description tags)
   (with-client (client)
     (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
-          (text (shorten-text (format NIL "~a~@[~%~a~]~{ #~a~}" url description tags))))
+          (text (shorten-text (format NIL "~a~@[~a~%~]~@[~%~a~]~{ #~a~}" url title description tags))))
       (status-url (chirp:statuses/update text)))))
 
-(defmethod multiposter:post-image ((client client) path &key description tags link)
+(defmethod multiposter:post-image ((client client) path &key title description tags link)
   (with-client (client)
     (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
           (limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
-      (status-url (chirp:statuses/update-with-media (prep-text description tags link :limit limit) path)))))
+      (status-url (chirp:statuses/update-with-media (prep-text (format NIL "~@[~a~%~]" title description) tags link :limit limit) path)))))
 
-(defmethod multiposter:post-video ((client client) path &key description tags link)
+(defmethod multiposter:post-video ((client client) path &key title description tags link)
   (with-client (client)
     (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
           (limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
-      (status-url (chirp:statuses/update-with-media (prep-text description tags link :limit limit) path)))))
+      (status-url (chirp:statuses/update-with-media (prep-text (format NIL "~@[~a~%~]" title description) tags link :limit limit) path)))))
