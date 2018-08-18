@@ -22,8 +22,8 @@
   `(make-instance 'client
                   :key ,(north:key client)
                   :secret ,(north:secret client)
-                  :access-token ,(north:token client)
-                  :access-secret ,(north:token-secret client)
+                  :token ,(north:token client)
+                  :token-secret ,(north:token-secret client)
                   :api-base ,(studio-client:api-base client)))
 
 (defmethod multiposter:login ((client client) &key base key secret token token-secret)
