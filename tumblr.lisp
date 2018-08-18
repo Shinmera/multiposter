@@ -75,12 +75,12 @@
   (with-client (client)
     (post-url client
               (humbler:blog/post-photo (blog client) path
-                                       :caption (format NIL "~@[~a~%~]~a~@[~&~%~a~]" title description link)
+                                       :caption (format NIL "~@[~a~%~]~@[~a~]~@[~&~%~a~]" title description link)
                                        :link link :tags tags :format :markdown :tweet :off))))
 
 (defmethod multiposter:post-video ((client client) path &key title description tags link)
   (with-client (client)
     (post-url client
               (humbler:blog/post-video (blog client) path
-                                       :caption (format NIL "~@[~a~%~]~a~@[~&~%~a~]" title description link)
+                                       :caption (format NIL "~@[~a~%~]~@[~a~]~@[~&~%~a~]" title description link)
                                        :tags tags :format :markdown :tweet :off))))

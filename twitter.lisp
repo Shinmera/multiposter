@@ -99,10 +99,10 @@
   (with-client (client)
     (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
           (limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
-      (status-url (chirp:statuses/update-with-media (prep-text (format NIL "~@[~a~%~]" title description) tags link :limit limit) path)))))
+      (status-url (chirp:statuses/update-with-media (prep-text (format NIL "~@[~a~%~]~@[~a~]" title description) tags link :limit limit) path)))))
 
 (defmethod multiposter:post-video ((client client) path &key title description tags link)
   (with-client (client)
     (let ((*link-length* (chirp:short-url-length-https (chirp:help/configuration)))
           (limit (- *text-limit* 1 (chirp:characters-reserved-per-media (chirp:help/configuration)))))
-      (status-url (chirp:statuses/update-with-media (prep-text (format NIL "~@[~a~%~]" title description) tags link :limit limit) path)))))
+      (status-url (chirp:statuses/update-with-media (prep-text (format NIL "~@[~a~%~]~@[~a~]" title description) tags link :limit limit) path)))))

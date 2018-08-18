@@ -59,7 +59,7 @@
     (tooter:url (tooter:make-status client text))))
 
 (defmethod multiposter:post-image ((client client) path &key title description tags link)
-  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]" title description) tags link) :media path)))
+  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]~@[~a~]" title description) tags link) :media path)))
 
 (defmethod multiposter:post-video ((client client) path &key title description tags link)
-  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]" title description) tags link) :media path)))
+  (tooter:url (tooter:make-status client (prep-text (format NIL "~@[~a~%~]~@[~a~]" title description) tags link) :media path)))

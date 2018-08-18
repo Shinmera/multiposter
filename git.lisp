@@ -37,7 +37,7 @@
     (when (uiop:subpathp path repo)
       (legit:pull repository)
       (legit:add repository (uiop:enough-pathname path repo))
-      (legit:commit repository (format NIL "~@[~a~%~%~]~a~@[~&~%Tags:~{ ~a~}~]~@[~%URL: ~a~]"
+      (legit:commit repository (format NIL "~@[~a~%~%~]~@[~a~]~@[~&~%Tags:~{ ~a~}~]~@[~%URL: ~a~]"
                                        title description tags link))
       (legit:push repository)
       (format NIL "file://~a" path))))
