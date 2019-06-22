@@ -6,7 +6,7 @@
 
 (asdf:defsystem multiposter
   :version "1.1.0"
-  :license "Artistic"
+  :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "A small application to post to multiple services at once."
