@@ -58,23 +58,48 @@
     (with-simple-restart (continue "Continue with the next client.")
       (apply #'login client args))))
 
+(defmacro with-abandonable-client (client &body body)
+  (let ((client-name (gensym)))
+    `(let ((,client-name ,client))
+       (restart-case (progn ,@body)
+         (continue ()
+           :report (lambda (s)
+                     (format s "Abandon posting to ~a, ~
+regardless of whether or not posting succeeded" ,client-name))
+           :test (lambda (c)
+                   (declare (ignore c))
+                   (not (typep ,client-name 'multiposter)))
+           NIL)
+         (continue-with-warning ()
+           :report (lambda (s)
+                     (format s "As CONTINUE, but emit a warning."))
+           :test (lambda (c)
+                   (declare (ignore c))
+                   (not (typep ,client-name 'multiposter)))
+           (warn "Posting failed for client ~a, skipping" ,client-name))))))
+
 (defun delegate-to (multiposter function primary args)
   (cond ((primary multiposter)
-         (let ((link (apply function (primary multiposter) primary args)))
+         (let ((primary-client (primary multiposter))
+               (link (with-abandonable-client primary-client
+                       (apply function primary-client primary args))))
            (list* link
                   (loop for client in (clients multiposter)
-                        unless (eq client (primary multiposter))
-                        collect (apply function client primary :link link args)))))
+                        unless (eq client primary-client)
+                        collect (with-abandonable-client client
+                                  (apply function client primary :link link args))))))
         (T
          (loop for client in (clients multiposter)
-               collect (apply function client primary args)))))
+               collect (with-abandonable-client client
+                         (apply function client primary args))))))
 
 (defmethod post-text ((multiposter multiposter) text &rest args)
   (delegate-to multiposter #'post-text text args))
 
 (defmethod post-link ((multiposter multiposter) url &rest args)
   (loop for client in (clients multiposter)
-        collect (apply #'post-link client url args)))
+        collect (with-abandonable-client client
+                  (apply #'post-link client url args))))
 
 (defmethod post-image ((multiposter multiposter) path &rest args)
   (delegate-to multiposter #'post-image (pathname path) args))
