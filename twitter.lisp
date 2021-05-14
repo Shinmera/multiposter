@@ -86,7 +86,7 @@
 
 (defmethod multiposter:post-text ((client client) text &key title tags link)
   (with-client (client)
-    (let (*link-length* (or (chirp:short-url-length-https (chirp:help/configuration)) 20))
+    (let ((*link-length* (or (chirp:short-url-length-https (chirp:help/configuration)) 20)))
       (status-url (chirp:statuses/update (prep-text (format NIL "~@[~a~%~]~a" title text) tags link))))))
 
 (defmethod multiposter:post-link ((client client) url &key title description tags)
