@@ -24,6 +24,22 @@
 (defgeneric post-image (client path &key title description tags link))
 (defgeneric post-video (client path &key title description tags link))
 
+(defmethod post-text :around ((client client) text &key &allow-other-keys)
+  (with-simple-restart (abort "Don't post to ~a" client)
+    (call-next-method)))
+
+(defmethod post-link :around ((client client) url &key &allow-other-keys)
+  (with-simple-restart (abort "Don't post to ~a" client)
+    (call-next-method)))
+
+(defmethod post-image :around ((client client) path &key &allow-other-keys)
+  (with-simple-restart (abort "Don't post to ~a" client)
+    (call-next-method)))
+
+(defmethod post-video :around ((client client) path &key &allow-other-keys)
+  (with-simple-restart (abort "Don't post to ~a" client)
+    (call-next-method)))
+
 (defmethod post (client (path pathname) &key title description tags link)
   (cond ((find (pathname-type path) *image-types* :test #'string-equal)
          (post-image client path :link link :tags tags :title title :description description))
@@ -63,18 +79,21 @@
          (let ((link (apply function (primary multiposter) primary args)))
            (list* link
                   (loop for client in (clients multiposter)
-                        unless (eq client (primary multiposter))
-                        collect (apply function client primary :link link args)))))
+                        for result = (unless (eq client (primary multiposter))
+                                       (apply function client primary :link link args))
+                        when result collect result))))
         (T
          (loop for client in (clients multiposter)
-               collect (apply function client primary args)))))
+               for result = (apply function client primary args)
+               when result collect result))))
 
 (defmethod post-text ((multiposter multiposter) text &rest args)
   (delegate-to multiposter #'post-text text args))
 
 (defmethod post-link ((multiposter multiposter) url &rest args)
   (loop for client in (clients multiposter)
-        collect (apply #'post-link client url args)))
+        for result = (apply #'post-link client url args)
+        when result collect result))
 
 (defmethod post-image ((multiposter multiposter) path &rest args)
   (delegate-to multiposter #'post-image (if (listp path) (mapcar #'pathname path) path) args))
