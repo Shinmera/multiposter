@@ -32,11 +32,15 @@
 
 (defun post-file (client path &key title description tags link)
   (let* ((repository (repository client))
-         (path (uiop:truenamize path))
-         (repo (uiop:truenamize (legit:location repository))))
-    (when (uiop:subpathp path repo)
-      (legit:pull repository)
-      (legit:add repository (uiop:enough-pathname path repo))
+         (paths (mapcar #'uiop:truenamize (if (listp path) path (list path))))
+         (repo (uiop:truenamize (legit:location repository)))
+         (staged NIL))
+    (legit:pull repository)
+    (loop for path in paths
+          do (when (uiop:subpathp path repo)
+               (setf staged T)
+               (legit:add repository (uiop:enough-pathname path repo))))
+    (when staged
       (legit:commit repository (format NIL "~@[~a~%~%~]~@[~a~]~@[~&~%Tags:~{ ~a~}~]~@[~%URL: ~a~]"
                                        title description tags link))
       (legit:push repository)
