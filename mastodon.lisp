@@ -1,9 +1,3 @@
-#|
- This file is a part of Multiposter
- (c) 2018 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
-|#
-
 (defpackage #:multiposter-mastodon
   (:nicknames #:org.shirakumo.multiposter.mastodon)
   (:use #:cl)
