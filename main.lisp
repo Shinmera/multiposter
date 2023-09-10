@@ -48,7 +48,8 @@
                             :tags (parse-tags tag)
                             :header header
                             :footer footer)
-                      *multiposter*))
+                      *multiposter*)
+         (when verbose (verbose "Added profile ~a" name/type)))
         ((string-equal kind "client")
          (add-client (list (or (gethash name/type *client-types*)
                                (error "Unknown client type: ~a" name/type))
@@ -65,7 +66,8 @@
                            :setup (if rest (loop for (k v) on rest by #'cddr
                                                  collect (intern (string-upcase k) "KEYWORD")
                                                  collect v)))
-                     *multiposter*))
+                     *multiposter*)
+         (when verbose (verbose "Added client ~a" (or client name/type))))
         (T
          (error "Unknown thing to add: ~a" kind)))
   (save-config))

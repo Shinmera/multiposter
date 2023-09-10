@@ -133,15 +133,16 @@
   (format *query-io* "~&> ~a~@[ [~a]~]~%" prompt (or default (when nullable "NIL")))
   (let ((coerce (or coerce #'identity))
         (check (or check (constantly T))))
-    (loop for input = (or (or* (read-line *query-io*))
-                          default)
+    (loop for input = (or* (read-line *query-io*))
           do (cond (input
                     (handler-case (let ((value (funcall coerce input)))
                                     (if (funcall check value)
-                                        value
+                                        (return value)
                                         (error "")))
                       (error ()
                         (format *query-io* "~&Please enter a valid value.~%"))))
+                   (default
+                    (return default))
                    (nullable
                     (return NIL))
                    (T

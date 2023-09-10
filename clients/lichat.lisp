@@ -1,7 +1,8 @@
 (in-package #:org.shirakumo.multiposter)
 
-(define-client lichat (file lichat-tcp-client:client)
-  ((channel :initarg :channel :accessor channel)))
+(define-client lichat (client lichat-tcp-client:client)
+  ((channel :initarg :channel :accessor channel))
+  (:default-initargs :hostname NIL :thread T))
 
 (defmethod initargs append ((client lichat))
   (list :hostname (lichat-tcp-client:hostname client)
@@ -55,7 +56,7 @@
   (lichat-tcp-client:connection-open-p client))
 
 (defmethod setup ((client lichat) &rest args)
-  (cond ((null args)
+  (cond ((and (null args) (null (lichat-tcp-client:hostname client)))
          (setf (lichat-tcp-client:hostname client) (query "Enter the lichat server's hostname" :default "chat.tymoon.eu"))
          (setf (lichat-tcp-client:port client) (query "Enter the lichat server's port" :default lichat-tcp-client:*default-port* :coerce #'parse-integer))
          (setf (lichat-tcp-client:username client) (query "Enter the username"))
