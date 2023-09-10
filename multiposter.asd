@@ -19,10 +19,13 @@
                (:module "clients"
                 :components ((:file "dummy")
                              (:file "file")
-                             (:file "git"))))
+                             (:file "git")
+                             (:file "lichat"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre
                :alexandria
                :trivial-arguments
-               :pathname-utils))
+               :pathname-utils
+
+               :lichat-tcp-client))
