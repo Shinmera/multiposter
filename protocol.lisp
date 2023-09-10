@@ -35,9 +35,10 @@
           finally (push tag (tags post))))
   post)
 
-(defmethod compose-post ((post post) &rest args &key exclude-tags)
+(defmethod compose-post ((post post) &rest args &key exclude-tags exclude-title)
   (remf args :exclude-tags)
-  (apply #'compose-post-text (merge-paragraphs (title post) (header post))
+  (remf args :exclude-title)
+  (apply #'compose-post-text (if exclude-title (header post) (merge-paragraphs (title post) (header post)))
          (description post) (footer post) :tags (unless exclude-tags (tags post)) args))
 
 (defclass image-post (post)

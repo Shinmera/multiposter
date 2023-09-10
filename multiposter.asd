@@ -22,7 +22,8 @@
                              (:file "git")
                              (:file "lichat")
                              (:file "mastodon")
-                             (:file "studio"))))
+                             (:file "studio")
+                             (:file "tumblr"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre
@@ -33,4 +34,5 @@
 
                :lichat-tcp-client
                :tooter
-               :studio-client))
+               :studio-client
+               :humbler))
