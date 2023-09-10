@@ -154,3 +154,6 @@
   (multiple-value-bind (s m h dd mm yy) (decode-universal-time universal-time)
     (format NIL "~4,'0d.~2,'0d.~2,'0d ~2,'0d-~2,'0d-~2,'0d"
             yy mm dd h m s)))
+
+(defun path-url (path)
+  (format NIL "file://~a" (pathname-utils:native-namestring path)))

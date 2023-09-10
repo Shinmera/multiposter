@@ -10,20 +10,41 @@
         :password (lichat-tcp-client:password client)
         :channel (channel client)))
 
-(defmethod post ((post post) (client lichat) &key verbose)
-  (when verbose (verbose "Posting message to ~a" (channel client)))
-  (lichat-tcp-client:s client 'message :channel (channel client) :message
-                       (apply #'compose-post-text (merge-paragraphs (title post) (header post))
-                              (description post) (footer post))))
+(defclass lichat-result (result)
+  ((message-ids :initform () :accessor message-ids)))
 
-(defmethod post :after ((post image-post) (client lichat) &key verbose)
-  (dolist (file (files post))
-    (when verbose (verbose "Sending ~a" file))
-    (lichat-tcp-client:s client 'data :channel (channel client) :payload file :filename (file-namestring file))))
+(defmethod undo ((result lichat-result))
+  (dolist (id (message-ids result))
+    (lichat-tcp-client:s (client result) 'edit :channel (channel (client result)) :id id :message "")))
+
+(defmethod failed-p ((result lichat-result))
+  (null (message-ids result)))
+
+(defmethod post ((post post) (client lichat) &key verbose)
+  (let ((result (make-instance 'lichat-result :client client :post post :url "?"))
+        (message (apply #'compose-post-text (merge-paragraphs (title post) (header post))
+                        (description post) (footer post))))
+    (when verbose (verbose "Posting message to ~a" (channel client)))
+    (lichat-tcp-client::with-eresponse (message client)
+        (lichat-tcp-client:s client 'message :channel (channel client) :message message)
+      (push (lichat-protocol:id message) result))
+    result))
+
+(defmethod post ((post image-post) (client lichat) &key verbose)
+  (let ((result (call-next-method)))
+    (dolist (file (files post) result)
+      (when verbose (verbose "Sending ~a" file))
+      (lichat-tcp-client::with-eresponse (message client)
+          (lichat-tcp-client:s client 'data :channel (channel client) :payload file :filename (file-namestring file))
+        (push (lichat-protocol:id message) result)))))
 
 (defmethod post :after ((post video-post) (client lichat) &key verbose)
-  (when verbose (verbose "Sending ~a" (file post)))
-  (lichat-tcp-client:s client 'data :channel (channel client) :payload (file post) :filename (file-namestring (file post))))
+  (let ((result (call-next-method))
+        (file (file post)))
+    (when verbose (verbose "Sending ~a" file))
+    (lichat-tcp-client::with-eresponse (message client)
+        (lichat-tcp-client:s client 'data :channel (channel client) :payload file :filename (file-namestring file))
+      (push (lichat-protocol:id message) result))))
 
 (defmethod post ((post link-post) (client lichat) &rest args)
   (apply #'call-next-method

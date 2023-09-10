@@ -154,7 +154,7 @@
                     (result result)
                     (null (make-instance 'result :client client :post post :url "None"))
                     (string (make-instance 'result :client client :post post :url result))
-                    (pathname (make-instance 'result :client client :post post :url (format NIL "file://~a" (pathname-utils:native-namestring result))))))
+                    (pathname (make-instance 'result :client client :post post :url (path-url result)))))
     (continue ()
       :report "Return a failure result"
       (make-instance 'result :client client :post post :url NIL))))
