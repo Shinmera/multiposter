@@ -10,18 +10,18 @@
                                           (abort e))
                                          (T
                                           (continue e))))))
-             (let ((posts (post (apply #'make-instance type
-                                       :title title
-                                       :description description
-                                       :tags (parse-tags tag)
-                                       args)
-                                (if profile
-                                    (or (find-profile profile *multiposter*)
-                                        (error "Unknown profile: ~a" profile))
-                                    *multiposter*)
-                                :verbose verbose)))
-               (dolist (post posts posts)
-                 (format *standard-output* "~&~a~%" (url post)))))))
+             (let ((results (post (apply #'make-instance type
+                                         :title title
+                                         :description description
+                                         :tags (parse-tags tag)
+                                         args)
+                                  (if profile
+                                      (or (find-profile profile *multiposter*)
+                                          (error "Unknown profile: ~a" profile))
+                                      *multiposter*)
+                                  :verbose verbose)))
+               (dolist (result results results)
+                 (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))))
     (cond ((listp thing)
            (post 'image-post :files (loop for path in thing
                                           collect (pathname-utils:parse-native-namestring path))))

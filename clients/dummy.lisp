@@ -6,8 +6,9 @@
 (defmethod initargs append ((client dummy))
   (list :char-limit (char-limit client)))
 
-(defmethod post ((post post) (client dummy) &key)
-  (format *standard-output* "~a" (compose-post-text post :char-limit (char-limit client)))
+(defmethod post ((post post) (client dummy) &key verbose)
+  (when verbose
+    (format *standard-output* "~a" (compose-post post :char-limit (char-limit client))))
   NIL)
 
 (defmethod ready-p ((client dummy)) T)

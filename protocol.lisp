@@ -115,7 +115,7 @@
 (defmethod initargs append ((client client))
   (list :post-tags (post-tags client)))
 
-(defgeneric post (post client &key))
+(defgeneric post (post client &key verbose))
 (defgeneric ready-p (client))
 (defgeneric setup (client &rest args))
 
@@ -147,7 +147,8 @@
 (defmethod failed-p ((result result))
   (null (url result)))
 
-(defmethod post :around ((post post) (client client) &key)
+(defmethod post :around ((post post) (client client) &key verbose)
+  (declare (ignore verbose))
   (restart-case (let ((result (call-next-method)))
                   (etypecase result
                     (result result)
@@ -220,7 +221,7 @@
 
 (defmethod post ((post post) (multiposter multiposter) &rest args)
   (apply #'post post (or (default-profile multiposter)
-                         (clients multiposter))
+                         (alexandria:hash-table-values (clients multiposter)))
          args))
 
 (defmethod post ((post post) (clients list) &rest args)
