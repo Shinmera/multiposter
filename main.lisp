@@ -62,7 +62,9 @@
                                                                   ((string-equal type "link") 'link-post)
                                                                   ((string-equal type "text") 'text-post))
                                                             tag)))
-                           :setup (or rest :interactive))
+                           :setup (if rest (loop for (k v) on rest by #'cddr
+                                                 collect (intern (string-upcase k) "KEYWORD")
+                                                 collect v)))
                      *multiposter*))
         (T
          (error "Unknown thing to add: ~a" kind)))
