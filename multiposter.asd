@@ -21,13 +21,16 @@
                              (:file "file")
                              (:file "git")
                              (:file "lichat")
-                             (:file "mastodon"))))
+                             (:file "mastodon")
+                             (:file "studio"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre
                :alexandria
                :trivial-arguments
                :pathname-utils
+               :uiop
 
                :lichat-tcp-client
-               :tooter))
+               :tooter
+               :studio-client))
