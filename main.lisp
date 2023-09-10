@@ -1,19 +1,5 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defvar *image-types* '("png" "jpg" "jpeg" "gif" "bmp" "svg"))
-(defvar *video-types* '("gifv" "apng" "mp4" "webm" "mov" "mkv"))
-
-(defun file-type-p (thing types)
-  (loop for type in types
-        thereis (and (< (1+ (length type)) (length thing))
-                     (string= thing type :start1 (- (length thing) (length type)))
-                     (char= #\. (char thing (- (length thing) 1 (length type)))))))
-
-(defun envvar (var)
-  (let ((val (uiop:getenv var)))
-    (when (and val (string/= "" val))
-      val)))
-
 (defun main/post (thing &key title profile description tag abort-on-failure verbose)
   (flet ((post (type &rest args)
            (handler-bind ((error (lambda (e)
@@ -24,29 +10,33 @@
                                           (abort e))
                                          (T
                                           (continue e))))))
-             (post (apply #'make-instance 'type
-                          :title title
-                          :description description
-                          :tags (parse-tags tag)
-                          args)
-                   (if profile
-                       (profile profile *multiposter*)
-                       *multiposter*)))))
+             (let ((posts (post (apply #'make-instance type
+                                       :title title
+                                       :description description
+                                       :tags (parse-tags tag)
+                                       args)
+                                (if profile
+                                    (or (find-profile profile *multiposter*)
+                                        (error "Unknown profile: ~a" profile))
+                                    *multiposter*)
+                                :verbose verbose)))
+               (dolist (post posts posts)
+                 (format *standard-output* "~&~a~%" (url post)))))))
     (cond ((listp thing)
            (post 'image-post :files (loop for path in thing
-                                          collect (uiop:parse-native-namestring path))))
+                                          collect (pathname-utils:parse-native-namestring path))))
           ((cl-ppcre:scan "^\\(.*\\)" thing)
            (post 'image-post :files (loop for path in (read-from-string thing)
                                           collect (etypecase path
                                                     (pathname path)
-                                                    (string (uiop:parse-native-namestring path))
-                                                    (symbol (uiop:parse-native-namestring (string-downcase path)))))))
+                                                    (string (pathname-utils:parse-native-namestring path))
+                                                    (symbol (pathname-utils:parse-native-namestring (string-downcase path)))))))
           ((cl-ppcre:scan "^https?://" thing)
            (post 'link-post :url thing))
           ((file-type-p thing *image-types*)
-           (post 'image-post :files (list (uiop:parse-native-namestring path))))
+           (post 'image-post :files (list (pathname-utils:parse-native-namestring thing))))
           ((file-type-p thing *video-types*)
-           (post 'video-post :file (uiop:parse-native-namestring path)))
+           (post 'video-post :file (pathname-utils:parse-native-namestring thing)))
           (T
            (setf description (merge-paragraphs thing description))
            (post 'text-post)))))
@@ -64,7 +54,7 @@
                                (error "Unknown client type: ~a" name/type))
                            :name client
                            :post-tags (loop for tag in (parse-tags tag)
-                                            collect (cl-ppcre:register-groups-bind (type tag) "^(:?(.+?):)?(.+)$" tag
+                                            collect (cl-ppcre:register-groups-bind (type tag) ("^(:?(.+?):)?(.+)$" tag)
                                                       (list (cond ((null type) 'post)
                                                                   ((string-equal type "post") 'post)
                                                                   ((string-equal type "image") 'image-post)
@@ -75,23 +65,24 @@
                            :setup (or rest :interactive))
                      *multiposter*))
         (T
-         (error "Unknown thing to add: ~a" kind))))
+         (error "Unknown thing to add: ~a" kind)))
+  (save-config))
 
 (defun main/list (kind &key verbose)
   (cond ((string-equal kind "profiles")
          (if (not verbose)
-             (format stream "~{~a~^ ~}" (alexandria:hash-table-keys (profiles *multiposter*)))
+             (format *standard-output* "~{~a~^ ~}" (alexandria:hash-table-keys (profiles *multiposter*)))
              (loop for profile being the hash-values of (profiles *multiposter*)
                    do (describe-object profile *standard-output*))))
         ((string-equal kind "clients")
          (if (not verbose)
-             (format stream "~{~a~^ ~}" (alexandria:hash-table-keys (clients *multiposter*)))
+             (format *standard-output* "~{~a~^ ~}" (alexandria:hash-table-keys (clients *multiposter*)))
              (loop for client being the hash-values of (clients *multiposter*)
                    do (describe-object client *standard-output*))))
         ((string-equal kind "client-types")
          (if (not verbose)
-             (format stream "~{~a~^ ~}" (alexandria:hash-table-keys *client-types*))
-             (loop forp type being the hash-values of *client-types*
+             (format *standard-output* "~{~a~^ ~}" (alexandria:hash-table-keys *client-types*))
+             (loop for type being the hash-values of *client-types*
                    do (error "FIXME: todo"))))
         (T
          (error "Unknown thing to list: ~a" kind))))
@@ -212,21 +203,20 @@ MULTIPOSTER_CONFIG    The path to the configuration file.
                                 (when (uiop:getenv "DEBUG")
                                   (invoke-debugger e)))))
           (destructuring-bind (command . args) args
-            (load-config)
             (let ((cmdfun (find-symbol (format NIL "~a/~:@(~a~)" 'main command) #.*package*)))
               (unless cmdfun
                 (error "No command named ~s." command))
-              (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
-                                                       :chars '(#\v :verbose
-                                                                #\# :tag
-                                                                #\c :client
-                                                                #\p :profile
-                                                                #\t :title
-                                                                #\d :description
-                                                                #\f :footer
-                                                                #\h :header
-                                                                #\a :abort-on-failure)))
-              (save-config))))
+              (let ((*multiposter* (load-config)))
+                (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
+                                                         :chars '(#\v :verbose
+                                                                  #\# :tag
+                                                                  #\c :client
+                                                                  #\p :profile
+                                                                  #\t :title
+                                                                  #\d :description
+                                                                  #\f :footer
+                                                                  #\h :header
+                                                                  #\a :abort-on-failure)))))))
       (error (e)
         (format *error-output* "~&ERROR: ~a~%" e)
         (uiop:quit 2)))

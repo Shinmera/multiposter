@@ -13,9 +13,12 @@
   :serial T
   :components ((:file "package")
                (:file "toolkit")
+               (:file "config")
                (:file "protocol")
                (:file "main"))
   :depends-on (:ubiquitous
+               :closer-mop
                :cl-ppcre
                :alexandria
-               :trivial-arguments))
+               :trivial-arguments
+               :pathname-utils))
