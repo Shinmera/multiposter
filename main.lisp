@@ -85,6 +85,13 @@
          (error "Unknown thing to add: ~a" kind)))
   (save-config))
 
+(defun main/set (property &rest args)
+  (cond ((string-equal property "default-profile")
+         (setf (default-profile *multiposter*) (first args)))
+        (T
+         (error "Unknown thing to set: ~a" property)))
+  (save-config))
+
 (defun main/list (kind &key verbose)
   (cond ((string-equal kind "profiles")
          (if (not verbose)
@@ -166,8 +173,12 @@ add client            Add a new client
 remove profile        Remove an existing profile
   name                  The name of the profile to remove
 
-remove client        Remove an existing client
+remove client         Remove an existing client
   name                  The name of the client to remove
+
+set default-profile   Set the default profile to use.
+  [profile]             The profile to set as default. If none is
+                        specified, the default is unset.
 
 list profiles         List known profiles
   -v --verbose          Print detailed information about each profile
