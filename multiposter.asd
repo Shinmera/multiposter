@@ -7,8 +7,15 @@
   :homepage "https://shinmera.github.io/multiposter/"
   :bug-tracker "https://github.com/shinmera/multiposter/issues"
   :source-control (:git "https://github.com/shinmera/multiposter.git")
+  :build-operation "program-op"
+  :build-pathname "multiposter"
+  :entry-point "org.shirakumo.multiposter::main"
   :serial T
   :components ((:file "package")
                (:file "toolkit")
-               (:file "protocol"))
-  :depends-on (:ubiquitous))
+               (:file "protocol")
+               (:file "main"))
+  :depends-on (:ubiquitous
+               :cl-ppcre
+               :alexandria
+               :trivial-arguments))

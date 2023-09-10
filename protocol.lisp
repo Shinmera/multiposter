@@ -1,7 +1,7 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defvar *image-types* '("png" "jpg" "jpeg" "gif" "bmp" "svg"))
-(defvar *video-types* '("gifv" "apng" "mp4" "webm" "mov" "mkv"))
+(defvar *multiposter*)
+(defvar *client-types* (make-hash-table :test 'equalp))
 
 (defclass post ()
   ((title :initform NIL :accessor title)
@@ -75,16 +75,25 @@
   (print-unreadable-object (post stream :type T :identity T)
     (format stream "~a" (url post))))
 
+(defclass text-post (post)
+  ())
+
 (defclass client ()
   ((name :initarg :name :accessor name)
    (post-tags :initform () :accessor post-tags)))
 
-(defmethod initialize-instance :after ((client client) &key post-tags)
+(defmethod initialize-instance :after ((client client) &key post-tags setup)
   (unless (slot-boundp client 'name)
     (setf (name client) (string-downcase (type-of client))))
   (loop for (post-type . tags) in post-tags
         do (push (list* post-type (loop for tag in tags when (or* tag) collect tag))
-                 (post-tags client))))
+                 (post-tags client)))
+  (etypecase setup
+    (null)
+    ((member T :interactive)
+     (setup client))
+    (cons
+     (apply #'setup client setup))))
 
 (defmethod print-object ((client client) stream)
   (print-unreadable-object (client stream :type T)
@@ -92,7 +101,7 @@
 
 (defgeneric post (post client))
 (defgeneric ready-p (client))
-(defgeneric login (client))
+(defgeneric setup (client &rest args))
 
 (defmethod post :around ((post post) (client client))
   (restart-case (call-next-method)
@@ -125,7 +134,7 @@
    (header :initform NIL :accessor header)
    (footer :initform NIL :accessor footer)))
 
-(defmethod initialize-instance :after ((profile profile) &key header footer clients tags multiposter)
+(defmethod initialize-instance :after ((profile profile) &key header footer clients tags (multiposter *multiposter*))
   (setf (header post) (or* header))
   (setf (footer post) (or* footer))
   (setf (tags profile) tags)
@@ -176,13 +185,17 @@
               unless (failed-p result)
               collect result)))))
 
+(defmethod post (thing (default (eql T)))
+  (post thing *multiposter*))
+
 (defgeneric add-client (client multiposter))
+(defgeneric add-profile (profile multiposter))
 
 (defmethod add-client :before ((client client) (multiposter multiposter))
   (when (gethash (string (name client)) (clients multiposter))
     (cerror "Replace the client" "A client with the name ~s already exists!" (name client)))
   (unless (ready-p client)
-    (login client)
+    (setup client)
     (unless (ready-p client)
       (cerror "Add the client anyway" "The client ~a is not ready." client))))
 
@@ -191,3 +204,19 @@
 
 (defmethod add-client ((spec cons) (multiposter multiposter))
   (add-client (apply #'make-instance spec) multiposter))
+
+(defmethod add-client (thing (default (eql T)))
+  (add-client thing *multiposter*))
+
+(defmethod add-profile :before ((profile profile) (multiposter multiposter))
+  (when (gethash (string (name profile)) (profiles multiposter))
+    (cerror "Replace the profile" "A profile with the name ~s already exists!" (name profile))))
+
+(defmethod add-profile ((profile profile) (multiposter multiposter))
+  (setf (gethash (sring (name profile)) (profiles multiposter)) multiposter))
+
+(defmethod add-profile ((spec cons) (multiposter multiposter))
+  (add-profile (apply #'make-instance 'profile :multiposter multiposter spec) multiposter))
+
+(defmethod add-profile (thing (default (eql T)))
+  (add-profile thing *multiposter*))
