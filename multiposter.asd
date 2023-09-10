@@ -17,7 +17,8 @@
                (:file "protocol")
                (:file "main")
                (:module "clients"
-                :components ((:file "dummy"))))
+                :components ((:file "dummy")
+                             (:file "file"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre

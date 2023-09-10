@@ -32,10 +32,11 @@
     (let ((filtered (loop for string in paragraphs
                           when (and string (string/= "" string))
                           collect string)))
-      (loop for (string . rest) on filtered
-            do (write-string string out)
-               (when (or* (car rest))
-                 (format out "~&~%"))))))
+      (when filtered
+        (loop for (string . rest) on filtered
+              do (write-string string out)
+                 (when (or* (car rest))
+                   (format out "~&~%")))))))
 
 (defun enlist (list &rest args)
   (if (consp list)
@@ -128,14 +129,28 @@
           (setf body (trim-text body char-limit)))))
     (merge-paragraphs header body footer (format NIL (format NIL "~~{~~a~~^~a~~}" tag-separator) tags))))
 
-(defun query (prompt &key nullable default coerce)
+(defun query (prompt &key nullable default coerce check)
   (format *query-io* "~&> ~a~@[ [~a]~]~%" prompt (or default (when nullable "NIL")))
-  (let ((coerce (or coerce #'identity)))
+  (let ((coerce (or coerce #'identity))
+        (check (or check (constantly T))))
     (loop for input = (or (or* (read-line *query-io*))
                           default)
           do (cond (input
-                    (return (funcall coerce input)))
+                    (handler-case (let ((value (funcall coerce input)))
+                                    (if (funcall check value)
+                                        value
+                                        (error "")))
+                      (error ()
+                        (format *query-io* "~&Please enter a valid value.~%"))))
                    (nullable
                     (return NIL))
                    (T
                     (format *query-io* "~&Please enter a value.~%"))))))
+
+(defun verbose (format &rest args)
+  (format *error-output* "~&; ~?~%" format args))
+
+(defun timestamp (&optional (universal-time (get-universal-time)))
+  (multiple-value-bind (s m h dd mm yy) (decode-universal-time universal-time)
+    (format NIL "~4,'0d.~2,'0d.~2,'0d ~2,'0d-~2,'0d-~2,'0d"
+            yy mm dd h m s)))
