@@ -27,6 +27,7 @@
                                            collect (initargs profile)))
   (setf (ubiquitous:value :clients) (loop for client being the hash-values of (clients multiposter)
                                           collect (list* (type-of client) (initargs client))))
-  (setf (ubiquitous:value :default-profile) (name (default-profile multiposter)))
+  (setf (ubiquitous:value :default-profile) (when (default-profile multiposter)
+                                              (name (default-profile multiposter))))
   (let ((*package* #.*package*))
     (ubiquitous:offload file)))

@@ -35,6 +35,10 @@
           finally (push tag (tags post))))
   post)
 
+(defmethod compose-post ((post post) &rest args)
+  (apply #'compose-post-text (merge-paragraphs (title post) (header post))
+         (description post) (footer post) :tags (tags post) args))
+
 (defclass image-post (post)
   ((files :initform () :accessor files)
    (file-descriptions :initform () :accessor file-descriptions)))
@@ -108,18 +112,22 @@
   (print-unreadable-object (client stream :type T)
     (format stream "~a" (name client))))
 
+(defmethod initargs append ((client client))
+  (list :post-tags (post-tags client)))
+
 (defgeneric post (post client &key))
 (defgeneric ready-p (client))
 (defgeneric setup (client &rest args))
 
-(defmethod post :around ((post post) (client client) &key)
-  (restart-case (call-next-method)
-    (continue ()
-      :report "Return a failure result"
-      (make-instance 'result :client client :post post :url NIL))))
+(defmacro define-client (name direct-superclasses direct-slots &rest options)
+  `(progn (defclass ,name ,direct-superclasses
+            ,direct-slots
+            ,@options)
+          (setf (gethash (string ',name) *client-types*) ',name)))
 
 (defclass result ()
   ((client :initarg :client :accessor client)
+   (post-object :initarg :post :initform NIL :accessor post-object)
    (url :initarg :url :initform NIL :accessor url)))
 
 (defmethod print-object ((result result) stream)
@@ -132,8 +140,23 @@
 (defgeneric undo (result))
 (defgeneric failed-p (result))
 
+(defmethod undo ((result result))
+  (error "Cannot undo this result for ~a.~@[~%Please delete the post at~%  ~a~]"
+         (client result) (url result)))
+
 (defmethod failed-p ((result result))
   (null (url result)))
+
+(defmethod post :around ((post post) (client client) &key)
+  (restart-case (let ((result (call-next-method)))
+                  (etypecase result
+                    (result result)
+                    (null (make-instance 'result :client client :post post :url "None"))
+                    (string (make-instance 'result :client client :post post :url result))
+                    (pathname (make-instance 'result :client client :post post :url (format NIL "file://~a" (pathname-utils:native-namestring result))))))
+    (continue ()
+      :report "Return a failure result"
+      (make-instance 'result :client client :post post :url NIL))))
 
 (defclass profile ()
   ((name :initarg :name :accessor name)
@@ -150,7 +173,8 @@
                                 collect (etypecase client
                                           (client client)
                                           ((or symbol string)
-                                           (find-client client multiposter))))))
+                                           (or (find-client client multiposter)
+                                               (error "Unknown client: ~a" client)))))))
 
 (defmethod print-object ((profile profile) stream)
   (print-unreadable-object (profile stream :type T)
@@ -164,7 +188,7 @@
         :footer (footer profile)))
 
 (defmethod post ((post post) (profile profile) &rest args)
-  (let ((post (make-like post :header (header profile) :footer (footer profile) :tags (tasg profile))))
+  (let ((post (make-like post :header (header profile) :footer (footer profile) :tags (tags profile))))
     (apply #'post post (clients profile) args)))
 
 (defclass multiposter ()
@@ -174,7 +198,7 @@
 
 (defmethod print-object ((multiposter multiposter) stream)
   (print-unreadable-object (multiposter stream :type T)
-    (format stream "~{~a~^ ~}" (mapcar #'type-of (clients multiposter)))))
+    (format stream "~{~a~^ ~}" (alexandria:hash-table-keys (clients multiposter)))))
 
 (defmethod shared-initialize :after ((multiposter multiposter) slots &key (default-profile NIL default-profile-p))
   (when default-profile-p (setf (default-profile multiposter) default-profile)))
@@ -231,7 +255,7 @@
       (cerror "Add the client anyway" "The client ~a is not ready." client))))
 
 (defmethod add-client ((client client) (multiposter multiposter))
-  (setf (gethash (sring (name client)) (clients multiposter)) multiposter))
+  (setf (gethash (string (name client)) (clients multiposter)) client))
 
 (defmethod add-client ((spec cons) (multiposter multiposter))
   (add-client (apply #'make-instance spec) multiposter))
@@ -244,7 +268,7 @@
     (cerror "Replace the profile" "A profile with the name ~s already exists!" (name profile))))
 
 (defmethod add-profile ((profile profile) (multiposter multiposter))
-  (setf (gethash (sring (name profile)) (profiles multiposter)) multiposter))
+  (setf (gethash (string (name profile)) (profiles multiposter)) profile))
 
 (defmethod add-profile ((spec cons) (multiposter multiposter))
   (add-profile (apply #'make-instance 'profile :multiposter multiposter spec) multiposter))

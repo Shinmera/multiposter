@@ -83,15 +83,16 @@
         (T
          (format NIL "~a..." (subseq text 0 (- char-limit 3))))))
 
-(defun compose-post-text (header body footer &key tags (tag-format "#~a") (char-limit most-positive-fixnum))
+(defun compose-post-text (header body footer &key tags (tag-format "#~a") (tag-separator " ") char-limit)
   ;; Compose with the following precedence:
   ;; 1. tags (drop whole tags only)
   ;; 2. header
   ;; 3. footer
   ;; 4. body
-  (let* ((tags (loop for tag in tags collect (format NIL tag-format tag)))
+  (let* ((char-limit (or char-limit most-positive-fixnum))
+         (tags (loop for tag in tags collect (format NIL tag-format tag)))
          (tag-length (+ (loop for tag in tags sum (length tag))
-                        (length tags)))
+                        (* (length tag-separator) (length tags))))
          (total-length (+ (if header (length header) 0)
                           (if footer (length footer) 0)
                           (if body (length body) 0)
@@ -125,4 +126,16 @@
           (decf char-limit 2))
         (when (< char-limit (length body))
           (setf body (trim-text body char-limit)))))
-    (merge-paragraphs header body footer (format NIL "~{~a~^ ~}" tags))))
+    (merge-paragraphs header body footer (format NIL (format NIL "~~{~~a~~^~a~~}" tag-separator) tags))))
+
+(defun query (prompt &key nullable default coerce)
+  (format *query-io* "~&> ~a~@[ [~a]~]~%" prompt (or default (when nullable "NIL")))
+  (let ((coerce (or coerce #'identity)))
+    (loop for input = (or (or* (read-line *query-io*))
+                          default)
+          do (cond (input
+                    (return (funcall coerce input)))
+                   (nullable
+                    (return NIL))
+                   (T
+                    (format *query-io* "~&Please enter a value.~%"))))))

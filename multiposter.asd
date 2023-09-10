@@ -15,7 +15,9 @@
                (:file "toolkit")
                (:file "config")
                (:file "protocol")
-               (:file "main"))
+               (:file "main")
+               (:module "clients"
+                :components ((:file "dummy"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre

@@ -68,20 +68,33 @@
          (error "Unknown thing to add: ~a" kind)))
   (save-config))
 
+(defun main/remove (kind name &key)
+  (cond ((string-equal kind "profile")
+         (unless (find-profile name *multiposter*)
+           (error "Unknown profile: ~a" name))
+         (remhash name (profiles *multiposter*)))
+        ((string-equal kind "client")
+         (unless (find-client name *multiposter*)
+           (error "Unknown client: ~a" name))
+         (remhash name (clients *multiposter*)))
+        (T
+         (error "Unknown thing to add: ~a" kind)))
+  (save-config))
+
 (defun main/list (kind &key verbose)
   (cond ((string-equal kind "profiles")
          (if (not verbose)
-             (format *standard-output* "~{~a~^ ~}" (alexandria:hash-table-keys (profiles *multiposter*)))
+             (format *standard-output* "~{~a~^ ~}~%" (alexandria:hash-table-keys (profiles *multiposter*)))
              (loop for profile being the hash-values of (profiles *multiposter*)
                    do (describe-object profile *standard-output*))))
         ((string-equal kind "clients")
          (if (not verbose)
-             (format *standard-output* "~{~a~^ ~}" (alexandria:hash-table-keys (clients *multiposter*)))
+             (format *standard-output* "~{~a~^ ~}~%" (alexandria:hash-table-keys (clients *multiposter*)))
              (loop for client being the hash-values of (clients *multiposter*)
                    do (describe-object client *standard-output*))))
         ((string-equal kind "client-types")
          (if (not verbose)
-             (format *standard-output* "~{~a~^ ~}" (alexandria:hash-table-keys *client-types*))
+             (format *standard-output* "~{~a~^ ~}~%" (alexandria:hash-table-keys *client-types*))
              (loop for type being the hash-values of *client-types*
                    do (error "FIXME: todo"))))
         (T
@@ -96,7 +109,8 @@ post                  Make a new post
                         explicit title field, it is prepended to the
                         description
   -p --profile profile  The profile to use for the post. If no profile
-                        is specified, posts to all clients
+                        is specified, posts to the default profile if
+                        any, or all configured clients if not.
   -d --description description
                         The description text to add to the post. This
                         may be truncated if it is too long for a
@@ -144,6 +158,12 @@ add client            Add a new client
   -- args*              Client type specific arguments to handle the
                         login. If unspecified, an interactive setup
                         will be used
+
+remove profile        Remove an existing profile
+  name                  The name of the profile to remove
+
+remove client        Remove an existing client
+  name                  The name of the client to remove
 
 list profiles         List known profiles
   -v --verbose          Print detailed information about each profile
@@ -206,7 +226,7 @@ MULTIPOSTER_CONFIG    The path to the configuration file.
             (let ((cmdfun (find-symbol (format NIL "~a/~:@(~a~)" 'main command) #.*package*)))
               (unless cmdfun
                 (error "No command named ~s." command))
-              (let ((*multiposter* (load-config)))
+              (let ((*multiposter* (load-config NIL)))
                 (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
                                                          :chars '(#\v :verbose
                                                                   #\# :tag
