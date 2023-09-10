@@ -68,3 +68,5 @@
          (when password (setf (password client) password))
          (when channel (setf (channel client) channel))))
   (lichat-tcp-client:open-connection client))
+
+(org.shirakumo.verbose:remove-global-controller)
