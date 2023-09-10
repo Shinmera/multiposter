@@ -20,7 +20,8 @@
                 :components ((:file "dummy")
                              (:file "file")
                              (:file "git")
-                             (:file "lichat"))))
+                             (:file "lichat")
+                             (:file "mastodon"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre
@@ -28,4 +29,5 @@
                :trivial-arguments
                :pathname-utils
 
-               :lichat-tcp-client))
+               :lichat-tcp-client
+               :tooter))
