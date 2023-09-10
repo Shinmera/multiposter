@@ -18,7 +18,8 @@
                (:file "main")
                (:module "clients"
                 :components ((:file "dummy")
-                             (:file "file"))))
+                             (:file "file")
+                             (:file "git"))))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre
