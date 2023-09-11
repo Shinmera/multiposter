@@ -44,7 +44,7 @@
           finally (push tag (tags post))))
   post)
 
-(defmethod compose-post ((post post) &rest args &key exclude-tags exclude-title)
+(defmethod compose-post ((post post) &rest args &key exclude-tags exclude-title &allow-other-keys)
   (remf args :exclude-tags)
   (remf args :exclude-title)
   (apply #'compose-post-text (if exclude-title (header post) (merge-paragraphs (title post) (header post)))
@@ -139,7 +139,7 @@
     (format stream "~a" (name client))))
 
 (defmethod initargs append ((client client))
-  (list :post-tags (post-tags client)))
+  (list :name (name client) :post-tags (post-tags client)))
 
 (defmacro define-client (name direct-superclasses direct-slots &rest options)
   `(progn (defclass ,name ,direct-superclasses
