@@ -52,7 +52,7 @@
          client args))
 
 (defmethod ready-p ((client file))
-  (path client))
+  (uiop:file-exists-p (path client)))
 
 (defmethod setup ((client file) &rest args &key path)
   (cond ((null args)
