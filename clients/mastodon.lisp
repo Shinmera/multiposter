@@ -19,6 +19,9 @@
 (defmethod failed-p ((result mastodon-result))
   (null (id result)))
 
+(defmethod post :around ((post post) (client mastodon) &rest args)
+  (apply #'call-next-method (make-like post :tags (filter-tags (tags post))) client args))
+
 (defmethod post ((post post) (client mastodon) &key verbose)
   (when verbose (verbose "Posting message to ~a" (tooter:base client)))
   (let ((status (tooter:make-status client (compose-post post :char-limit 500)

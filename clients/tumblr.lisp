@@ -31,6 +31,9 @@
          (make-instance 'tumblr-result :client ,client :post ,post :post-id post-id :url
                         (format NIL "https://~a.tumblr.com/post/~a" (blog ,client) post-id))))))
 
+(defmethod post :around ((post post) (client mastodon) &rest args)
+  (apply #'call-next-method (make-like post :tags (filter-tags (tags post) #'non-comma-p)) client args))
+
 (define-tumblr-post image-post (post client)
   (humbler:blog/post-photo (blog client) (files post) :tags (tags post) :caption (compose-post post :exclude-tags T)))
 
