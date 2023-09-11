@@ -21,28 +21,26 @@
         (humbler:*user* NIL))
     (humbler:blog/post/delete (blog (client result)) (post-id result))))
 
-(defmethod post :around ((post post) (client tumblr) &key verbose)
-  (let ((humbler:*client* client)
-        (humbler:*user* NIL))
-    (when verbose (verbose "Posting image to Tumblr"))
-    (let ((post-id (call-next-method)))
-      (make-instance 'tumblr-result :client humbler:*client* :post post :post-id post-id :url
-                     (format NIL "https://~a.tumblr.com/post/~a" (blog humbler:*client*) post-id)))))
 
-(defmethod post ((post image-post) (client tumblr) &key verbose)
-  (declare (ignore verbose))
+(defmacro define-tumblr-post (post-type (post client) &body body)
+  `(defmethod post ((,post ,post-type) (,client tumblr) &key verbose)
+     (let ((humbler:*client* ,client)
+           (humbler:*user* NIL))
+       (when verbose (verbose "Posting image to Tumblr"))
+       (let ((post-id (progn ,@body)))
+         (make-instance 'tumblr-result :client ,client :post ,post :post-id post-id :url
+                        (format NIL "https://~a.tumblr.com/post/~a" (blog ,client) post-id))))))
+
+(define-tumblr-post image-post (post client)
   (humbler:blog/post-photo (blog client) (files post) :tags (tags post) :caption (compose-post post :exclude-tags T)))
 
-(defmethod post ((post video-post) (client tumblr) &key verbose)
-  (declare (ignore verbose))
-  (humbler:blog/post-video (blog client) (file post) :tags (tags post) :caption (compose-post post :exclude-tags T :title T)))
+(define-tumblr-post video-post (post client)
+  (humbler:blog/post-video (blog client) (file post) :tags (tags post) :caption (compose-post post :exclude-tags T)))
 
-(defmethod post ((post link-post) (client tumblr) &key verbose)
-  (declare (ignore verbose))
+(define-tumblr-post link-post (post client)
   (humbler:blog/post-link (blog client) (url post) :title (title post) :tags (tags post) :description (compose-post post :exclude-tags T :exclude-title T)))
 
-(defmethod post ((post text-post) (client tumblr) &key verbose)
-  (declare (ignore verbose))
+(define-tumblr-post text-post (post client)
   (humbler:blog/post-text (blog client) (compose-post post :exclude-tags T :exclude-title T) :title (title post) :tags (tags post)))
 
 (defmethod ready-p ((client tumblr))
