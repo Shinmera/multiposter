@@ -23,7 +23,8 @@
                              (:file "lichat")
                              (:file "mastodon")
                              (:file "studio")
-                             (:file "tumblr"))))
+                             (:file "tumblr")))
+               (:file "documentation"))
   :depends-on (:ubiquitous
                :closer-mop
                :cl-ppcre
@@ -31,6 +32,7 @@
                :trivial-arguments
                :pathname-utils
                :uiop
+               :documentation-utils
 
                :north-drakma
                :lichat-tcp-client

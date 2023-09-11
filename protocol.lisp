@@ -166,12 +166,14 @@
 (defmethod failed-p ((result result))
   (null (url result)))
 
-(defmethod post :around ((post post) (client client) &key verbose)
-  (declare (ignore verbose))
-  (restart-case (let ((result (call-next-method)))
+(defmethod post :around ((post post) (client client) &rest args)
+  (restart-case (let* ((tags (loop for (type . tags) in (post-tags client)
+                                   when (typep post type)
+                                   append tags))
+                       (result (apply #'call-next-method (make-like post :tags tags) client args)))
                   (etypecase result
                     (result result)
-                    (null (make-instance 'result :client client :post post :url "None"))
+                    (null (make-instance 'result :client client :post post :url ""))
                     (string (make-instance 'result :client client :post post :url result))
                     (pathname (make-instance 'result :client client :post post :url (path-url result)))))
     (continue ()
@@ -189,12 +191,14 @@
   (setf (header profile) (or* header))
   (setf (footer profile) (or* footer))
   (setf (tags profile) tags)
-  (setf (clients profile) (loop for client in clients
-                                collect (etypecase client
-                                          (client client)
-                                          ((or symbol string)
-                                           (or (find-client client multiposter)
-                                               (error "Unknown client: ~a" client)))))))
+  (setf (clients profile) (if clients
+                              (loop for client in clients
+                                    collect (etypecase client
+                                              (client client)
+                                              ((or symbol string)
+                                               (or (find-client client multiposter)
+                                                   (error "Unknown client: ~a" client)))))
+                              (clients multiposter))))
 
 (defmethod print-object ((profile profile) stream)
   (print-unreadable-object (profile stream :type T)
@@ -208,8 +212,10 @@
         :footer (footer profile)))
 
 (defmethod post ((post post) (profile profile) &rest args)
-  (let ((post (make-like post :header (header profile) :footer (footer profile) :tags (tags profile))))
-    (apply #'post post (clients profile) args)))
+  (let ((post (make-like post :header (merge-paragraphs (header post) (header profile))
+                              :footer (merge-paragraphs (footer post) (footer profile))
+                              :tags (tags profile))))
+    (apply #'post post (or (clients profile) (error "The profile has no clients")) args)))
 
 (defclass multiposter ()
   ((clients :initform (make-hash-table :test 'equalp) :accessor clients)
@@ -238,7 +244,7 @@
                          (alexandria:hash-table-values (clients multiposter)))
          args))
 
-(defmethod post ((post post) (clients list) &rest args)
+(defmethod post ((post post) (clients cons) &rest args)
   (let ((results (loop for client in clients
                        collect (apply #'post post client args))))
     (restart-case (dolist (result results results)

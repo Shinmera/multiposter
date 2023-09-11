@@ -75,7 +75,8 @@
 
 (defun filter-tags (tags &optional (allowed-char-fun #'alphanumeric-p))
   (loop for tag in tags
-        collect (remove-if-not allowed-char-fun tag)))
+        for filtered = (remove-if-not allowed-char-fun tag)
+        unless (string= "" filtered) collect filtered))
 
 (defun trim-text (text char-limit)
   (cond ((<= (length text) char-limit)

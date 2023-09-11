@@ -3,7 +3,7 @@
 (define-client git (file)
   ())
 
-(defun git (verbose client &rest args)
+(defun %git (verbose client &rest args)
   (uiop:run-program (list* "git" "-C" (pathname-utils:native-namestring (path client))
                            (loop for arg in args
                                  collect (etypecase arg
@@ -20,7 +20,7 @@
                                                   :defaults (path client))))
                        (uiop:copy-file source target)
                        target)))))
-    (git verbose client "add" file)
+    (%git verbose client "add" file)
     file))
 
 (defun git-current-commit (client)
@@ -33,17 +33,17 @@
   ((commit :initarg :commit :initform NIL :accessor commit)))
 
 (defmethod undo ((result git-result))
-  (git NIL (client result) "reset" (format NIL "~a~~" (commit result))))
+  (%git NIL (client result) "reset" (format NIL "~a~~" (commit result))))
 
 (defmethod failed-p ((result git-result))
   (null (commit result)))
 
 (defmethod post :around ((post post) (client git) &key verbose)
-  (git verbose client "pull")
+  (%git verbose client "pull")
   (let ((result (call-next-method)))
-    (git verbose client "commit" "-m" (compose-post post :tag-separator ", " :tag-format "~a"))
+    (%git verbose client "commit" "-m" (compose-post post :tag-separator ", " :tag-format "~a"))
     (setf (commit result) (git-current-commit client))
-    (git verbose client "push")
+    (%git verbose client "push")
     result))
 
 (defmethod post ((post text-post) (client git) &key verbose)
