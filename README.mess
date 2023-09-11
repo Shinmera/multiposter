@@ -1,0 +1,23 @@
+# About Multiposter
+This is an application that lets you post to multiple web services at once.
+
+## How To
+While you can use Multiposter from the REPL, it also has a convenient command line interface. To build a binary, simply run ``sbcl --eval '(asdf:make :multiposter)'``.
+
+The following services are supported:
+
+- Files (just writes to disk)
+- Git (commits and pushes)
+- Lichat
+- Mastodon
+- Studio
+- Tumblr
+
+On the command line you can simply run ``multiposter`` and it should show you a nice help text with all the available options and commands.
+
+## Creating New Clients
+If you'd like to contribute another client to Multiposter, it's not too hard. Simply create a new client class with ``define-client``, and ensure all the properties that should be persisted for it are returned from an ``initargs`` method. Then implement methods for the ``post``, ``ready-p`` and ``setup`` functions.
+
+If your service supports undoing/deleting a post, you should also create a ``result`` subclass and implement the ``undo`` method for it. Your ``post`` methods should then return a result instance on success, such that the post can be removed again later if desired.
+
+For the ``setup`` function, make sure you implement the following logic: if ``&rest args`` are passed, reinitialise your client to use those initargs. Otherwise, if your client is not yet ``ready-p``, perform an interactive setup using ``query`` to prompt the user for the necessary options.

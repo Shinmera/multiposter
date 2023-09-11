@@ -13,8 +13,8 @@
 
 (defmethod ready-p ((client dummy)) T)
 
-(defmethod setup ((client dummy) &rest args &key char-limit)
-  (cond ((null args)
+(defmethod setup ((client dummy) &rest args)
+  (cond ((and (null args) (null (char-limit client)))
          (setf (char-limit client) (query "Enter the post length limit" :nullable T :coerce #'parse-integer)))
         (T
-         (setf (char-limit client) char-limit))))
+         (apply #'reinitialize-instance client args))))
