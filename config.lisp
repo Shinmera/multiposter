@@ -15,10 +15,10 @@
     (ubiquitous:restore file))
   (unless multiposter
     (setf multiposter (make-instance 'multiposter)))
-  (loop for profile in (ubiquitous:value :profiles)
-        do (add-profile profile multiposter))
   (loop for client in (ubiquitous:value :clients)
         do (add-client client multiposter))
+  (loop for profile in (ubiquitous:value :profiles)
+        do (add-profile profile multiposter))
   (setf (default-profile multiposter) (ubiquitous:value :default-profile))
   multiposter)
 
