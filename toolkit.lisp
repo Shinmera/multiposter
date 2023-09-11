@@ -12,10 +12,13 @@
                                 ,arg))))))
 
 (defun file-type-p (thing types)
-  (loop for type in types
-        thereis (and (< (1+ (length type)) (length thing))
-                     (string= thing type :start1 (- (length thing) (length type)))
-                     (char= #\. (char thing (- (length thing) 1 (length type)))))))
+  (let ((thing (etypecase thing
+                 (pathname (file-namestring thing))
+                 (string thing))))
+    (loop for type in types
+          thereis (and (< (1+ (length type)) (length thing))
+                       (string= thing type :start1 (- (length thing) (length type)))
+                       (char= #\. (char thing (- (length thing) 1 (length type))))))))
 
 (defun envvar (var)
   (let ((val (uiop:getenv var)))

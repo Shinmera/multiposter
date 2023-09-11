@@ -25,7 +25,7 @@
 
 (defmethod post ((post image-post) (client studio) &key verbose)
   (when verbose (verbose "Posting image to ~a" (studio-client:api-base client)))
-  (let ((upload (studio-client:make-upload client (title post) (files post)
+  (let ((upload (studio-client:make-upload client (or (title post) (pathname-name (first (files post)))) (files post)
                                            :tags (tags post) :description (compose-post post :exclude-tags T))))
     (make-instance 'studio-result :client client :post post :upload upload :url (studio-client:url upload))))
 

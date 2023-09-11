@@ -32,6 +32,7 @@
                :pathname-utils
                :uiop
 
+               :north-drakma
                :lichat-tcp-client
                :tooter
                :studio-client

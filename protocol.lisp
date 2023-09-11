@@ -1,7 +1,18 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defvar *multiposter*)
+(defvar *multiposter* NIL)
 (defvar *client-types* (make-hash-table :test 'equalp))
+
+(defgeneric add-tag (tag post))
+(defgeneric post (post client &key verbose))
+(defgeneric ready-p (client))
+(defgeneric setup (client &rest args))
+(defgeneric undo (result))
+(defgeneric failed-p (result))
+(defgeneric add-client (client multiposter))
+(defgeneric add-profile (profile multiposter))
+(defgeneric find-profile (name multiposter))
+(defgeneric find-client (name multiposter))
 
 (defclass post ()
   ((title :initform NIL :accessor title)
@@ -22,8 +33,6 @@
 (defmethod print-object ((post post) stream)
   (print-unreadable-object (post stream :type T :identity T)
     (format stream "~@[~a~]" (title post))))
-
-(defgeneric add-tag (tag post))
 
 (defmethod add-tag ((tag string) (post post))
   (let ((trimmed (remove #\Space tag)))
@@ -77,6 +86,15 @@
   (print-unreadable-object (post stream :type T :identity T)
     (format stream "~a" (file post))))
 
+(defmethod post ((file pathname) target &rest args)
+  (apply #'post (cond ((file-type-p file *image-types*)
+                       (make-instance 'image-post :files (list file)))
+                      ((file-type-p file *video-types*)
+                       (make-instance 'video-post :file file))
+                      (T
+                       (error "Unknown file type: ~a" (pathname-type file))))
+         target args))
+
 (defclass link-post (post)
   ((url :accessor url)))
 
@@ -92,6 +110,12 @@
 
 (defclass text-post (post)
   ())
+
+(defmethod post ((text string) target &rest args)
+  (apply #'post (if (cl-ppcre:scan "^https?://" text)
+                    (make-instance 'text-post :description text)
+                    (make-instance 'link-post :url text))
+         target args))
 
 (defclass client ()
   ((name :initarg :name :accessor name)
@@ -117,10 +141,6 @@
 (defmethod initargs append ((client client))
   (list :post-tags (post-tags client)))
 
-(defgeneric post (post client &key verbose))
-(defgeneric ready-p (client))
-(defgeneric setup (client &rest args))
-
 (defmacro define-client (name direct-superclasses direct-slots &rest options)
   `(progn (defclass ,name ,direct-superclasses
             ,direct-slots
@@ -138,9 +158,6 @@
     (if (failed-p result)
         (format stream "FAILED")
         (format stream "~a" (url result)))))
-
-(defgeneric undo (result))
-(defgeneric failed-p (result))
 
 (defmethod undo ((result result))
   (error "Cannot undo this result for ~a.~@[~%Please delete the post at~%  ~a~]"
@@ -216,11 +233,6 @@
 (defmethod (setf default-profile) ((profile profile) (multiposter multiposter))
   (setf (slot-value multiposter 'default-profile) profile))
 
-(defgeneric add-client (client multiposter))
-(defgeneric add-profile (profile multiposter))
-(defgeneric find-profile (name multiposter))
-(defgeneric find-client (name multiposter))
-
 (defmethod post ((post post) (multiposter multiposter) &rest args)
   (apply #'post post (or (default-profile multiposter)
                          (alexandria:hash-table-values (clients multiposter)))
@@ -285,8 +297,14 @@
 (defmethod find-profile ((name symbol) (multiposter multiposter))
   (find-profile (string name) multiposter))
 
+(defmethod find-profile (thing (default (eql T)))
+  (find-profile thing *multiposter*))
+
 (defmethod find-client ((name string) (multiposter multiposter))
   (gethash name (clients multiposter)))
 
 (defmethod find-client ((name symbol) (multiposter multiposter))
   (find-client (string name) multiposter))
+
+(defmethod find-client (thing (default (eql T)))
+  (find-client thing *multiposter*))

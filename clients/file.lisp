@@ -55,7 +55,7 @@
   (uiop:file-exists-p (path client)))
 
 (defmethod setup ((client file) &rest args &key path)
-  (cond ((null args)
+  (cond ((and (null args) (null (path client)))
          (setf (path client) (query "Enter the directory to save files in"
                                     :coerce (lambda (x) (pathname-utils:parse-native-namestring x :as :directory))
                                     :check #'ensure-directories-exist)))

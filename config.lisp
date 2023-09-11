@@ -30,4 +30,5 @@
   (setf (ubiquitous:value :default-profile) (when (default-profile multiposter)
                                               (name (default-profile multiposter))))
   (let ((*package* #.*package*))
-    (ubiquitous:offload file)))
+    (ubiquitous:offload file))
+  multiposter)
