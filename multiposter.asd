@@ -23,7 +23,8 @@
                              (:file "lichat")
                              (:file "mastodon")
                              (:file "studio")
-                             (:file "tumblr")))
+                             (:file "tumblr")
+                             (:file "pixiv")))
                (:file "documentation"))
   :depends-on (:ubiquitous
                :closer-mop
