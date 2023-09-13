@@ -10,6 +10,7 @@ The following services are supported:
 - ``Git`` (commits and pushes)
 - ``Lichat``
 - ``Mastodon``
+- ``Pixiv``
 - ``Studio``
 - ``Tumblr``
 
