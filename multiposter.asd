@@ -33,7 +33,8 @@
                :pathname-utils
                :uiop
                :documentation-utils
-
+               :trivial-mimes
+               :lquery
                :north-drakma
                :lichat-tcp-client
                :tooter

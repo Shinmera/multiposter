@@ -78,6 +78,11 @@
         for filtered = (remove-if-not allowed-char-fun tag)
         unless (string= "" filtered) collect filtered))
 
+(defun limit (seq limit)
+  (if (<= (length seq) limit)
+      seq
+      (subseq seq 0 limit)))
+
 (defun trim-text (text char-limit)
   (cond ((<= (length text) char-limit)
          text)
@@ -162,3 +167,9 @@
 
 (defun path-url (path)
   (format NIL "file://~a" (pathname-utils:native-namestring path)))
+
+(defun file-size (file)
+  (etypecase file
+    (stream (file-length file))
+    (pathname (with-open-file (stream file :element-type '(unsigned-byte 8))
+                (file-length stream)))))
