@@ -6,14 +6,14 @@ While you can use Multiposter from the REPL, it also has a convenient command li
 
 The following services are supported:
 
-- ``File`` (just writes to disk)
-- ``Git`` (commits and pushes)
-- ``Lichat``
-- ``Mastodon``
-- ``Pixiv``
-- ``Studio``
-- ``Tumblr``
-- ``WebDAV``
+- File (just writes to disk)
+- Git (commits and pushes)
+- "Lichat"(https://shirakumo.github.io/lichat)
+- "Mastodon"(https://mastodon.social)
+- "Pixiv"(https://pixiv.net)
+- "Studio"(https://studio.tymoon.eu)
+- "Tumblr"(https://tumblr.com)
+- WebDAV
 
 On the command line you can simply run ``multiposter`` and it should show you a nice help text with all the available options and commands.
 
