@@ -13,6 +13,7 @@ The following services are supported:
 - ``Pixiv``
 - ``Studio``
 - ``Tumblr``
+- ``WebDAV``
 
 On the command line you can simply run ``multiposter`` and it should show you a nice help text with all the available options and commands.
 

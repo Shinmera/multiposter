@@ -24,7 +24,8 @@
                              (:file "mastodon")
                              (:file "studio")
                              (:file "tumblr")
-                             (:file "pixiv")))
+                             (:file "pixiv")
+                             (:file "webdav")))
                (:file "documentation"))
   :depends-on (:ubiquitous
                :closer-mop

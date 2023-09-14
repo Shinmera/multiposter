@@ -31,6 +31,10 @@
                                ,@(getf args :additional-headers))
          args))
 
+(defmethod post ((post post) (client pixiv) &key verbose)
+  (declare (ignore verbose))
+  (error "Can't post ~a to Pixiv." (type-of post)))
+
 (defmethod post ((post image-post) (client pixiv) &key verbose)
   (when verbose (verbose "Posting image to pixiv..."))
   (let ((body (plump:parse (pixiv-request client :post "/upload.php" '(("mode" . "upload"))))))
