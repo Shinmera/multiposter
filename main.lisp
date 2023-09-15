@@ -146,7 +146,7 @@
         (verbose "No more scheduled posts left."))))
 
 (defun main/help ()
-  (format T "Commands:
+  (format T "== Commands ==
 
 post                  Make a new post
   [url | file | files | text]
@@ -234,11 +234,25 @@ process               Process scheduled posts
 
 help                  Shows this help listing
 
-Environment Variables:
+== Environment variables ==
 
 DEBUG                 When set, will enter the debugger on error
 MULTIPOSTER_CONFIG    The path to the configuration file.
-"))
+
+== Post scheduling ==
+When a post is created with a scheduling time in the future, it will
+not be posted to the services. In fact, it will only be recorded in
+the local configuration, and Multiposter will exit.
+
+It is up to you to invoke multiposter with the process command at
+regular intervals to actually perform the posting of scheduled posts
+that are now due. When a scheduled post has been actually posted
+successfully without failure, the schedule is removed from the
+local configuration.
+
+When process is invoked with the verbose flag, it will also note the
+timestamp for the next due post, if any, as well as how overdue each
+scheduled post has been."))
 
 (defun parse-args (args &key flags chars)
   (let ((kargs ())
