@@ -4,6 +4,7 @@
 (defvar *client-types* (make-hash-table :test 'equalp))
 
 (defgeneric add-tag (tag post))
+(defgeneric due-p (post))
 (defgeneric post (post client &key verbose))
 (defgeneric ready-p (client))
 (defgeneric setup (client &rest args))
@@ -20,14 +21,16 @@
    (footer :initform NIL :accessor footer)
    (description :initform NIL :accessor description)
    (content-warning :initform NIL :accessor content-warning)
+   (due-time :initform 0 :accessor due-time)
    (tags :initform () :accessor tags)))
 
-(defmethod shared-initialize :after ((post post) slots &key (title NIL title-p) (description NIL description-p) (header NIL header-p) (footer NIL footer-p) (content-warning NIL content-warning-p) tags)
+(defmethod shared-initialize :after ((post post) slots &key (title NIL title-p) (description NIL description-p) (header NIL header-p) (footer NIL footer-p) (content-warning NIL content-warning-p) (due-time NIL due-time-p) tags)
   (when title-p (setf (title post) (or* title)))
   (when description-p (setf (description post) (or* description)))
   (when header-p (setf (header post) (or* header)))
   (when footer-p (setf (footer post) (or* footer)))
   (when content-warning-p (setf (content-warning post) (or* content-warning)))
+  (when due-time-p (setf (due-time post) (etypecase due-time (string (parse-timestring due-time)) (null 0) (integer due-time))))
   (dolist (tag tags) (add-tag tag post)))
 
 (defmethod print-object ((post post) stream)
@@ -43,6 +46,9 @@
                (return))
           finally (push tag (tags post))))
   post)
+
+(defmethod due-p ((post post))
+  (< (due-time post) (get-universal-time)))
 
 (defmethod compose-post ((post post) &rest args &key exclude-tags exclude-title &allow-other-keys)
   (remf args :exclude-tags)
