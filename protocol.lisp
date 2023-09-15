@@ -143,6 +143,20 @@
   ((markup :initarg :markup :initform :plain :accessor markup)
    (file :initarg :file :initform NIL :accessor file)))
 
+(defmethod shared-initialize :after ((post text-post) slots &key (file NIL file-p))
+  (when file-p
+    ;; FIXME: shitty, make it extensible instead.
+    (setf (markup post) (or (second (assoc (pathname-type file)
+                                           '(("txt" :plain)
+                                             ("org" :org)
+                                             ("md" :markdown)
+                                             ("mess" :markless)
+                                             ("bb" :bbcode)
+                                             ("html" :html)
+                                             ("htm" :html))
+                                           :test #'string-equal))
+                            (markup post)))))
+
 (defmethod post ((text string) target &rest args)
   (apply #'post (if (cl-ppcre:scan "^https?://" text)
                     (make-instance 'link-post :url text)
