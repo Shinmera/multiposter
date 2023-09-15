@@ -133,13 +133,21 @@
         (T
          (error "Unknown thing to list: ~a" kind))))
 
-(defun main/process (&key verbose)
-  (loop for schedule = (first (schedules *multiposter*))
-        while (and schedule (due-p schedule))
-        do (when verbose
-             (verbose "Posting ~a, overdue by ~ds"
-                      (name schedule) (max 0 (- (get-universal-time) (due-time schedule)))))
-           (post schedule *multiposter*))
+(defun main/process (&key verbose abort-on-failure)
+  (handler-bind ((error (lambda (e)
+                          (format *error-output* "~&ERROR: ~a~%" e)
+                          (cond ((uiop:getenv "DEBUG")
+                                 (invoke-debugger e))
+                                (abort-on-failure
+                                 (abort e))
+                                (T
+                                 (continue e))))))
+    (loop for schedule = (first (schedules *multiposter*))
+          while (and schedule (due-p schedule))
+          do (when verbose
+               (verbose "Posting ~a, overdue by ~ds"
+                        (name schedule) (max 0 (- (get-universal-time) (due-time schedule)))))
+             (post schedule *multiposter*)))
   (when verbose
     (if (schedules *multiposter*)
         (verbose "Next post due on ~a" (timestamp (due-time (first (schedules *multiposter*)))))
@@ -167,6 +175,9 @@ post                  Make a new post
                         the characters will be removed from the tag
   -s --schedule time    Schedule the post to be created on a specified
                         time in the future. See scheduling below.
+  -a --abort-on-failure If set and one client fails to post, all posts
+                        will be deleted. By default failing clients
+                        are simply ignored.
   -v --verbose          Print status updates about what's happening
 
 add profile           Add a new profile
@@ -231,6 +242,9 @@ list client-types     List available client types
 
 process               Process scheduled posts
   -v --verbose          Print status updates about what's happening
+  -a --abort-on-failure If set and one client fails to post, all posts
+                        will be deleted and the schedule is retained.
+                        By default failing clients are simply ignored.
 
 help                  Shows this help listing
 

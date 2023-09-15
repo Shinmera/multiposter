@@ -308,10 +308,9 @@
       (abort ()
         :report "Undo all posts"
         (loop for result in results
-              if (failed-p result)
-              do (undo result)
-              else
-              collect result))
+              do (unless (failed-p result)
+                   (undo result)))
+        NIL)
       (continue ()
         :report "Ignore the failure"
         (loop for result in results
@@ -323,18 +322,17 @@
 
 (defmethod post ((schedule schedule) (multiposter multiposter) &rest args)
   (cond ((due-p schedule)
-         (multiple-value-prog1
-             (apply #'post (post-object schedule)
-                    (etypecase (target schedule)
-                      ((member NIL T)
-                       multiposter)
-                      ((or multiposter client profile)
-                       (target schedule))
-                      ((or string symbol)
-                       (or (find-profile (target schedule) multiposter)
-                           (find-client (target schedule) multiposter)
-                           (error "Unknown profile or client: ~s" (target schedule)))))
-                    args)
+         (when (apply #'post (post-object schedule)
+                      (etypecase (target schedule)
+                        ((member NIL T)
+                         multiposter)
+                        ((or multiposter client profile)
+                         (target schedule))
+                        ((or string symbol)
+                         (list (or (find-profile (target schedule) multiposter)
+                                   (find-client (target schedule) multiposter)
+                                   (error "Unknown profile or client: ~s" (target schedule))))))
+                      args)
            ;; Unregister schedule now.
            (setf (find-schedule (name schedule) multiposter) NIL)))
         (T
