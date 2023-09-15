@@ -1,27 +1,38 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defun main/post (thing &key title profile description tag abort-on-failure verbose)
-  (flet ((post (type &rest args)
-           (handler-bind ((error (lambda (e)
-                                   (format *error-output* "~&ERROR: ~a~%" e)
-                                   (cond ((uiop:getenv "DEBUG")
-                                          (invoke-debugger e))
-                                         (abort-on-failure
-                                          (abort e))
-                                         (T
-                                          (continue e))))))
-             (let ((results (post (apply #'make-instance type
-                                         :title title
-                                         :description description
-                                         :tags (parse-tags tag)
-                                         args)
-                                  (if profile
-                                      (or (find-profile profile *multiposter*)
-                                          (error "Unknown profile: ~a" profile))
-                                      *multiposter*)
-                                  :verbose verbose)))
+(defun main/post (thing &key title profile description tag schedule abort-on-failure verbose)
+  (labels ((post! (post target)
+             (let ((results (post post target :verbose verbose)))
                (dolist (result results results)
-                 (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))))
+                 (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))
+           (post (type &rest args)
+             (handler-bind ((error (lambda (e)
+                                     (format *error-output* "~&ERROR: ~a~%" e)
+                                     (cond ((uiop:getenv "DEBUG")
+                                            (invoke-debugger e))
+                                           (abort-on-failure
+                                            (abort e))
+                                           (T
+                                            (continue e))))))
+               (let ((target (if profile
+                                 (or (find-profile profile *multiposter*)
+                                     (error "Unknown profile: ~a" profile))
+                                 *multiposter*))
+                     (post (apply #'make-instance type
+                                  :title title
+                                  :description description
+                                  :tags (parse-tags tag)
+                                  args)))
+                 (cond ((null schedule)
+                        (post! post target))
+                       (T
+                        (let ((schedule (make-instance 'schedule :due-time schedule :target target :post post)))
+                          (cond ((due-p schedule)
+                                 (post! post target))
+                                (T
+                                 (add-schedule schedule T)
+                                 (save-config)
+                                 (format *standard-output* "~&Scheduled as ~a on ~a~%" (name schedule) (timestamp (due-time schedule))))))))))))
     (cond ((listp thing)
            (post 'image-post :files (loop for path in thing
                                           collect (pathname-utils:parse-native-namestring path))))
@@ -78,13 +89,17 @@
   (cond ((string-equal kind "profile")
          (unless (find-profile name *multiposter*)
            (error "Unknown profile: ~a" name))
-         (remhash name (profiles *multiposter*)))
+         (setf (find-profile name (clients *multiposter*)) NIL))
         ((string-equal kind "client")
          (unless (find-client name *multiposter*)
            (error "Unknown client: ~a" name))
-         (remhash name (clients *multiposter*)))
+         (setf (find-client name (clients *multiposter*)) NIL))
+        ((string-equal kind "schedule")
+         (unless (find-schedule name *multiposter*)
+           (error "Unknown post: ~a" name))
+         (setf (find-schedule name (clients *multiposter*)) NIL))
         (T
-         (error "Unknown thing to add: ~a" kind)))
+         (error "Unknown thing to remove: ~a" kind)))
   (save-config))
 
 (defun main/set (property &rest args)
@@ -105,6 +120,11 @@
              (format *standard-output* "~{~a~^ ~}~%" (alexandria:hash-table-keys (clients *multiposter*)))
              (loop for client being the hash-values of (clients *multiposter*)
                    do (describe-object client *standard-output*))))
+        ((string-equal kind "schedules")
+         (if (not verbose)
+             (format *standard-output* "~{~a~^ ~}~%" (mapcar #'name (schedules *multiposter*)))
+             (loop for schedule in (schedules *multiposter*)
+                   do (describe-object schedule *standard-output*))))
         ((string-equal kind "client-types")
          (if (not verbose)
              (format *standard-output* "~{~a~^ ~}~%" (alexandria:hash-table-keys *client-types*))
@@ -112,6 +132,18 @@
                    do (error "FIXME: todo"))))
         (T
          (error "Unknown thing to list: ~a" kind))))
+
+(defun main/process (&key verbose)
+  (loop for schedule = (first (schedules *multiposter*))
+        while (and schedule (due-p schedule))
+        do (when verbose
+             (verbose "Posting ~a, overdue by ~ds"
+                      (name schedule) (max 0 (- (get-universal-time) (due-time schedule)))))
+           (post schedule *multiposter*))
+  (when verbose
+    (if (schedules *multiposter*)
+        (verbose "Next post due on ~a" (timestamp (due-time (first (schedules *multiposter*)))))
+        (verbose "No more scheduled posts left."))))
 
 (defun main/help ()
   (format T "Commands:
@@ -123,7 +155,7 @@ post                  Make a new post
                         description
   -p --profile profile  The profile to use for the post. If no profile
                         is specified, posts to the default profile if
-                        any, or all configured clients if not.
+                        any, or all configured clients if not
   -d --description description
                         The description text to add to the post. This
                         may be truncated if it is too long for a
@@ -133,9 +165,8 @@ post                  Make a new post
                         separated by commas. If a tag contains
                         characters that a service does not support,
                         the characters will be removed from the tag
-  -a --abort-on-failure If set and one client fails to post, all posts
-                        will be deleted. By default failing clients
-                        are simply ignored.
+  -s --schedule time    Schedule the post to be created on a specified
+                        time in the future. See scheduling below.
   -v --verbose          Print status updates about what's happening
 
 add profile           Add a new profile
@@ -167,7 +198,7 @@ add client            Add a new client
     image                 Posts that include one or more images
     video                 Posts that include a video
     link                  Posts that have a leading link
-  -v --verbose          Print status updates about what's happening.
+  -v --verbose          Print status updates about what's happening
   -- args*              Client type specific arguments to handle the
                         login. If unspecified, an interactive setup
                         will be used
@@ -178,9 +209,12 @@ remove profile        Remove an existing profile
 remove client         Remove an existing client
   name                  The name of the client to remove
 
+remove schedule       Remove a scheduled post
+  name                  The name of the post to remove
+
 set default-profile   Set the default profile to use.
   [profile]             The profile to set as default. If none is
-                        specified, the default is unset.
+                        specified, the default is unset
 
 list profiles         List known profiles
   -v --verbose          Print detailed information about each profile
@@ -188,9 +222,15 @@ list profiles         List known profiles
 list clients          List known clients
   -v --verbose          Print detailed information about each client
 
+list schedules        List scheduled posts
+  -v --verbose          Print detailed information about each post
+
 list client-types     List available client types
   -v --verbose          Print detailed information about each type's
                         arguments
+
+process               Process scheduled posts
+  -v --verbose          Print status updates about what's happening
 
 help                  Shows this help listing
 
@@ -245,15 +285,16 @@ MULTIPOSTER_CONFIG    The path to the configuration file.
                 (error "No command named ~s." command))
               (let ((*multiposter* (load-config NIL)))
                 (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
-                                                         :chars '(#\v :verbose
-                                                                  #\# :tag
+                                                         :chars '(#\# :tag
+                                                                  #\a :abort-on-failure
                                                                   #\c :client
-                                                                  #\p :profile
-                                                                  #\t :title
                                                                   #\d :description
                                                                   #\f :footer
                                                                   #\h :header
-                                                                  #\a :abort-on-failure)))))))
+                                                                  #\p :profile
+                                                                  #\s :schedule
+                                                                  #\t :title
+                                                                  #\v :verbose)))))))
       (error (e)
         (format *error-output* "~&ERROR: ~a~%" e)
         (uiop:quit 2)))

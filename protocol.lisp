@@ -23,7 +23,7 @@
    (target :initarg :target :accessor target)
    (due-time :initform 0 :accessor due-time)))
 
-(defmethod shared-initialize :after ((schedule schedule) slots &key multiposter (due-time NIL due-time-p) (post-object NIL post-object-p))
+(defmethod shared-initialize :after ((schedule schedule) slots &key (multiposter *multiposter*) (due-time NIL due-time-p) (post-object NIL post-object-p))
   (when due-time-p
     (setf (due-time schedule) (etypecase due-time
                                 (null 0)
@@ -322,19 +322,23 @@
   (apply #'post thing *multiposter* args))
 
 (defmethod post ((schedule schedule) (multiposter multiposter) &rest args)
-  (if (due-p schedule)
-      (apply #'post (post-object schedule)
-             (etypecase (target schedule)
-               ((member NIL T)
-                multiposter)
-               ((or multiposter client profile)
-                (target schedule))
-               ((or string symbol)
-                (or (find-profile (target schedule) multiposter)
-                    (find-client (target schedule) multiposter)
-                    (error "Unknown profile or client: ~s" (target schedule)))))
-             args)
-      (add-schedule schedule multiposter)))
+  (cond ((due-p schedule)
+         (multiple-value-prog1
+             (apply #'post (post-object schedule)
+                    (etypecase (target schedule)
+                      ((member NIL T)
+                       multiposter)
+                      ((or multiposter client profile)
+                       (target schedule))
+                      ((or string symbol)
+                       (or (find-profile (target schedule) multiposter)
+                           (find-client (target schedule) multiposter)
+                           (error "Unknown profile or client: ~s" (target schedule)))))
+                    args)
+           ;; Unregister schedule now.
+           (setf (find-schedule (name schedule) multiposter) NIL)))
+        (T
+         (add-schedule schedule multiposter))))
 
 (defmethod add-client :before ((client client) (multiposter multiposter))
   (when (gethash (string (name client)) (clients multiposter))
@@ -386,6 +390,9 @@
 (defmethod find-profile (thing (default (eql T)))
   (find-profile thing *multiposter*))
 
+(defmethod (setf find-profile) ((none null) (name string) (multiposter multiposter))
+  (remhash name (profiles multiposter)))
+
 (defmethod find-client ((name string) (multiposter multiposter))
   (gethash name (clients multiposter)))
 
@@ -395,6 +402,9 @@
 (defmethod find-client (thing (default (eql T)))
   (find-client thing *multiposter*))
 
+(defmethod (setf find-client) ((none null) (name string) (multiposter multiposter))
+  (remhash name (clients multiposter)))
+
 (defmethod find-schedule ((name string) (multiposter multiposter))
   (find name (schedules multiposter) :key #'name :test #'string=))
 
@@ -403,3 +413,6 @@
 
 (defmethod find-schedule (thing (default (eql T)))
   (find-schedule thing *multiposter*))
+
+(defmethod (setf find-schedule) ((none null) (name string) (multiposter multiposter))
+  (setf (schedules multiposter) (remove name (schedules multiposter) :key #'name :test #'string=)))
