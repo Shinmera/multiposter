@@ -19,6 +19,8 @@
         do (add-client client multiposter))
   (loop for profile in (ubiquitous:value :profiles)
         do (add-profile profile multiposter))
+  (loop for schedule in (ubiquitous:value :schedules)
+        do (add-schedule schedule multiposter))
   (setf (default-profile multiposter) (ubiquitous:value :default-profile))
   multiposter)
 
@@ -27,6 +29,8 @@
                                            collect (initargs profile)))
   (setf (ubiquitous:value :clients) (loop for client being the hash-values of (clients multiposter)
                                           collect (list* (type-of client) (initargs client))))
+  (setf (ubiquitous:value :schedules) (loop for schedule in (schedules multiposter)
+                                            collect (initargs schedule)))
   (setf (ubiquitous:value :default-profile) (when (default-profile multiposter)
                                               (name (default-profile multiposter))))
   (let ((*package* #.*package*))

@@ -12,8 +12,49 @@
 (defgeneric failed-p (result))
 (defgeneric add-client (client multiposter))
 (defgeneric add-profile (profile multiposter))
+(defgeneric add-schedule (profile multiposter))
 (defgeneric find-profile (name multiposter))
 (defgeneric find-client (name multiposter))
+(defgeneric find-schedule (name multiposter))
+
+(defclass schedule ()
+  ((name :initarg :name :initform (make-random-string) :accessor name)
+   (post-object :initarg :post :accessor post-object)
+   (target :initarg :target :accessor target)
+   (due-time :initform 0 :accessor due-time)))
+
+(defmethod shared-initialize :after ((schedule schedule) slots &key multiposter (due-time NIL due-time-p) (post-object NIL post-object-p))
+  (when due-time-p
+    (setf (due-time schedule) (etypecase due-time
+                                (null 0)
+                                (integer due-time)
+                                (string (parse-timestring due-time)))))
+  (when post-object-p
+    (setf (post-object schedule) (etypecase post-object
+                                   (post post-object)
+                                   (cons (apply #'make-instance :multiposter multiposter post-object))))))
+
+(defmethod print-object ((schedule schedule) stream)
+  (print-unreadable-object (schedule stream :type T :identity T)
+    (format stream "~a ~a" (name schedule) (timestamp (due-time schedule)))))
+
+(defmethod due-p ((schedule schedule))
+  (< (due-time schedule) (get-universal-time)))
+
+(defmethod (setf due-p) ((now (eql T)) (schedule schedule))
+  (setf (due-time schedule) 0))
+
+(defmethod initargs append ((schedule schedule))
+  (list :name (name schedule)
+        :post-object (list* (type-of (post-object schedule)) (initargs (post-object schedule)))
+        :target (etypecase (target schedule)
+                  ((or symbol string)
+                   (target schedule))
+                  ((or client profile)
+                   (name (target schedule)))
+                  (multiposter
+                   T))
+        :due-time (due-time schedule)))
 
 (defclass post ()
   ((title :initform NIL :accessor title)
@@ -21,16 +62,14 @@
    (footer :initform NIL :accessor footer)
    (description :initform NIL :accessor description)
    (content-warning :initform NIL :accessor content-warning)
-   (due-time :initform 0 :accessor due-time)
    (tags :initform () :accessor tags)))
 
-(defmethod shared-initialize :after ((post post) slots &key (title NIL title-p) (description NIL description-p) (header NIL header-p) (footer NIL footer-p) (content-warning NIL content-warning-p) (due-time NIL due-time-p) tags)
+(defmethod shared-initialize :after ((post post) slots &key (title NIL title-p) (description NIL description-p) (header NIL header-p) (footer NIL footer-p) (content-warning NIL content-warning-p) tags)
   (when title-p (setf (title post) (or* title)))
   (when description-p (setf (description post) (or* description)))
   (when header-p (setf (header post) (or* header)))
   (when footer-p (setf (footer post) (or* footer)))
   (when content-warning-p (setf (content-warning post) (or* content-warning)))
-  (when due-time-p (setf (due-time post) (etypecase due-time (string (parse-timestring due-time)) (null 0) (integer due-time))))
   (dolist (tag tags) (add-tag tag post)))
 
 (defmethod print-object ((post post) stream)
@@ -46,9 +85,6 @@
                (return))
           finally (push tag (tags post))))
   post)
-
-(defmethod due-p ((post post))
-  (< (due-time post) (get-universal-time)))
 
 (defmethod compose-post ((post post) &rest args &key exclude-tags exclude-title &allow-other-keys)
   (remf args :exclude-tags)
@@ -236,6 +272,7 @@
 (defclass multiposter ()
   ((clients :initform (make-hash-table :test 'equalp) :accessor clients)
    (profiles :initform (make-hash-table :test 'equalp) :accessor profiles)
+   (schedules :initform () :accessor schedules)
    (default-profile :initform NIL :reader default-profile)))
 
 (defmethod print-object ((multiposter multiposter) stream)
@@ -258,7 +295,8 @@
 (defmethod post ((post post) (multiposter multiposter) &rest args)
   (apply #'post post (or (default-profile multiposter)
                          (alexandria:hash-table-values (clients multiposter)))
-         args))
+         args)
+  (push post (posts multiposter)))
 
 (defmethod post ((post post) (clients cons) &rest args)
   (let ((results (loop for client in clients
@@ -282,6 +320,21 @@
 
 (defmethod post (thing (default (eql T)) &rest args)
   (apply #'post thing *multiposter* args))
+
+(defmethod post ((schedule schedule) (multiposter multiposter) &rest args)
+  (if (due-p schedule)
+      (apply #'post (post-object schedule)
+             (etypecase (target schedule)
+               ((member NIL T)
+                multiposter)
+               ((or multiposter client profile)
+                (target schedule))
+               ((or string symbol)
+                (or (find-profile (target schedule) multiposter)
+                    (find-client (target schedule) multiposter)
+                    (error "Unknown profile or client: ~s" (target schedule)))))
+             args)
+      (add-schedule schedule multiposter)))
 
 (defmethod add-client :before ((client client) (multiposter multiposter))
   (when (gethash (string (name client)) (clients multiposter))
@@ -313,6 +366,17 @@
 (defmethod add-profile (thing (default (eql T)))
   (add-profile thing *multiposter*))
 
+(defmethod add-schedule ((schedule schedule) (multiposter multiposter))
+  (unless (find schedule (schedules multiposter))
+    (setf (schedules multiposter) (sort (list* schedule (schedules multiposter)) #'< :key #'due-time)))
+  schedule)
+
+(defmethod add-schedule ((spec cons) (multiposter multiposter))
+  (add-schedule (apply #'make-instance 'schedule :multiposter multiposter spec) multiposter))
+
+(defmethod add-schedule (thing (default (eql T)))
+  (add-schedule thing *multiposter*))
+
 (defmethod find-profile ((name string) (multiposter multiposter))
   (gethash name (profiles multiposter)))
 
@@ -330,3 +394,12 @@
 
 (defmethod find-client (thing (default (eql T)))
   (find-client thing *multiposter*))
+
+(defmethod find-schedule ((name string) (multiposter multiposter))
+  (find name (schedules multiposter) :key #'name :test #'string=))
+
+(defmethod find-schedule ((name symbol) (multiposter multiposter))
+  (find-schedule (string name) multiposter))
+
+(defmethod find-schedule (thing (default (eql T)))
+  (find-schedule thing *multiposter*))

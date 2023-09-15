@@ -10,8 +10,15 @@
    #:failed-p
    #:add-client
    #:add-profile
+   #:add-schedule
    #:find-profile
    #:find-client
+   #:find-schedule
+   #:schedule
+   #:due-time
+   #:post-object
+   #:target
+   #:due-p
    #:post
    #:title
    #:header
@@ -45,6 +52,7 @@
    #:header
    #:footer
    #:multiposter
+   #:schedules
    #:default-profile)
   ;; config.lisp
   (:export

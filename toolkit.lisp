@@ -228,3 +228,8 @@ Valid formats include:
     (stream (file-length file))
     (pathname (with-open-file (stream file :element-type '(unsigned-byte 8))
                 (file-length stream)))))
+
+(defun make-random-string (&optional (length 8))
+  (with-output-to-string (out)
+    (dotimes (i length)
+      (write-char (alexandria:random-elt "abcdefghikmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") out))))
