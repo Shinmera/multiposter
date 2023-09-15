@@ -103,8 +103,8 @@
 
 (defmethod post ((text string) target &rest args)
   (apply #'post (if (cl-ppcre:scan "^https?://" text)
-                    (make-instance 'text-post :description text)
-                    (make-instance 'link-post :url text))
+                    (make-instance 'link-post :url text)
+                    (make-instance 'text-post :description text))
          target args))
 
 (defgeneric convert-markup (text source-markup target-markup))

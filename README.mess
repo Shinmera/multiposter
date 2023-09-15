@@ -11,7 +11,8 @@ The following services are supported:
 - "Lichat"(https://shirakumo.github.io/lichat)
 - "Mastodon"(https://mastodon.social)
 - "Pixiv"(https://pixiv.net)
-- "Studio"(https://studio.tymoon.eu)
+- "Reader"(https://github.com/shirakumo/reader)
+- "Studio"(https://github.com/shirakumo/studio)
 - "Tumblr"(https://tumblr.com)
 - WebDAV
 
@@ -23,5 +24,3 @@ If you'd like to contribute another client to Multiposter, it's not too hard. Si
 If your service supports undoing/deleting a post, you should also create a ``result`` subclass and implement the ``undo`` method for it. Your ``post`` methods should then return a result instance on success, such that the post can be removed again later if desired.
 
 For the ``setup`` function, make sure you implement the following logic: if ``&rest args`` are passed, reinitialise your client to use those initargs. Otherwise, if your client is not yet ``ready-p``, perform an interactive setup using ``query`` to prompt the user for the necessary options.
-
-; Service ideas: reader, patreon, kickstarter, steam (announcements)

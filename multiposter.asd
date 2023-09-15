@@ -22,9 +22,10 @@
                              (:file "git")
                              (:file "lichat")
                              (:file "mastodon")
+                             (:file "pixiv")
+                             (:file "reader")
                              (:file "studio")
                              (:file "tumblr")
-                             (:file "pixiv")
                              (:file "webdav")))
                (:file "documentation"))
   :depends-on (:ubiquitous
