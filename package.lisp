@@ -28,6 +28,8 @@
    #:link-post
    #:url
    #:text-post
+   #:markup
+   #:convert-markup
    #:client
    #:name
    #:post-tags

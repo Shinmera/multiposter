@@ -91,9 +91,28 @@
                        (make-instance 'image-post :files (list file)))
                       ((file-type-p file *video-types*)
                        (make-instance 'video-post :file file))
+                      ((file-type-p file *text-types*)
+                       (make-instance 'text-post :file file))
                       (T
                        (error "Unknown file type: ~a" (pathname-type file))))
          target args))
+
+(defclass text-post (post)
+  ((markup :initarg :markup :initform :plain :accessor markup)
+   (file :initarg :file :initform NIL :accessor file)))
+
+(defmethod post ((text string) target &rest args)
+  (apply #'post (if (cl-ppcre:scan "^https?://" text)
+                    (make-instance 'text-post :description text)
+                    (make-instance 'link-post :url text))
+         target args))
+
+(defgeneric convert-markup (text source-markup target-markup))
+
+(defmethod convert-markup (text source-markup target-markup)
+  (if (eql source-markup target-markup)
+      text
+      (no-applicable-method #'convert-markup (list text source-markup target-markup))))
 
 (defclass link-post (post)
   ((url :accessor url)))
@@ -107,15 +126,6 @@
 (defmethod print-object ((post link-post) stream)
   (print-unreadable-object (post stream :type T :identity T)
     (format stream "~a" (url post))))
-
-(defclass text-post (post)
-  ())
-
-(defmethod post ((text string) target &rest args)
-  (apply #'post (if (cl-ppcre:scan "^https?://" text)
-                    (make-instance 'text-post :description text)
-                    (make-instance 'link-post :url text))
-         target args))
 
 (defclass client ()
   ((name :initarg :name :accessor name)

@@ -37,6 +37,8 @@
            (post 'image-post :files (list (pathname-utils:parse-native-namestring thing))))
           ((file-type-p thing *video-types*)
            (post 'video-post :file (pathname-utils:parse-native-namestring thing)))
+          ((file-type-p thing *text-types*)
+           (post 'text-post :file (pathname-utils:parse-native-namestring thing)))
           (T
            (setf description (merge-paragraphs thing description))
            (post 'text-post)))))

@@ -2,6 +2,7 @@
 
 (defvar *image-types* '("png" "jpg" "jpeg" "gif" "bmp" "svg"))
 (defvar *video-types* '("gifv" "apng" "mp4" "webm" "mov" "mkv"))
+(defvar *text-types* '("txt" "org" "md" "mess" "bb" "html" "htm"))
 
 (defmacro or* (&rest vals)
   (let ((arg (gensym "ARG")))
