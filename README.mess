@@ -6,6 +6,7 @@ While you can use Multiposter from the REPL, it also has a convenient command li
 
 The following services are supported:
 
+- "Cohost"(https://cohost.org)
 - File (just writes to disk)
 - Git (commits and pushes)
 - "Lichat"(https://shirakumo.github.io/lichat)

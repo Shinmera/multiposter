@@ -1,5 +1,7 @@
 (defpackage #:org.shirakumo.multiposter
   (:use #:cl)
+  (:local-nicknames
+   (#:cohost #:org.shirakumo.clohost))
   ;; protocol.lisp
   (:export
    #:add-tag
@@ -82,10 +84,13 @@
    #:path-url)
   ;; clients
   (:export
+   #:cohost
    #:dummy
    #:file
    #:git
    #:lichat
    #:mastodon
+   #:reader
    #:studio
-   #:tumblr))
+   #:tumblr
+   #:webdav))

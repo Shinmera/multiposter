@@ -18,6 +18,7 @@
                (:file "main")
                (:module "clients"
                 :components ((:file "dummy")
+                             (:file "cohost")
                              (:file "file")
                              (:file "git")
                              (:file "lichat")
@@ -43,4 +44,5 @@
                :tooter
                :studio-client
                :humbler
+               :clohost
                :fuzzy-dates))

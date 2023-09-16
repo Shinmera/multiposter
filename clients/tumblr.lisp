@@ -26,12 +26,12 @@
   `(defmethod post ((,post ,post-type) (,client tumblr) &key verbose)
      (let ((humbler:*client* ,client)
            (humbler:*user* NIL))
-       (when verbose (verbose "Posting image to Tumblr"))
+       (when verbose (verbose "Posting to Tumblr"))
        (let ((post-id (progn ,@body)))
          (make-instance 'tumblr-result :client ,client :post ,post :post-id post-id :url
                         (format NIL "https://~a.tumblr.com/post/~a" (blog ,client) post-id))))))
 
-(defmethod post :around ((post post) (client mastodon) &rest args)
+(defmethod post :around ((post post) (client tumblr) &rest args)
   (apply #'call-next-method (make-like post :tags (filter-tags (tags post) #'non-comma-p)) client args))
 
 (define-tumblr-post image-post (post client)
