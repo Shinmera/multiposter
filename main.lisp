@@ -1,8 +1,8 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defun main/post (thing &key title profile description tag schedule abort-on-failure verbose)
+(defun main/post (thing &key title profile description tag schedule abort-on-failure verbose exclude)
   (labels ((post! (post target)
-             (let ((results (post post target :verbose verbose)))
+             (let ((results (post post target :verbose verbose :exclude exclude)))
                (dolist (result results results)
                  (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))
            (post (type &rest args)
@@ -173,6 +173,8 @@ post                  Make a new post
                         separated by commas. If a tag contains
                         characters that a service does not support,
                         the characters will be removed from the tag
+  -e --exclude client   Do not post to the specified client. Can be
+                        specified multiple times to exclude multiple
   -s --schedule time    Schedule the post to be created on a specified
                         time in the future. See scheduling below.
   -a --abort-on-failure If set and one client fails to post, all posts
@@ -317,6 +319,7 @@ scheduled post has been."))
                                                                   #\a :abort-on-failure
                                                                   #\c :client
                                                                   #\d :description
+                                                                  #\e :exclude
                                                                   #\f :footer
                                                                   #\h :header
                                                                   #\p :profile

@@ -163,9 +163,9 @@
                     (make-instance 'text-post :description text))
          target args))
 
-(defgeneric convert-markup (text source-markup target-markup))
+(defgeneric convert-markup (text source-markup target-markup &rest args))
 
-(defmethod convert-markup (text source-markup target-markup)
+(defmethod convert-markup (text source-markup target-markup &key)
   (if (eql source-markup target-markup)
       text
       (no-applicable-method #'convert-markup (list text source-markup target-markup))))
@@ -309,11 +309,12 @@
 (defmethod post ((post post) (multiposter multiposter) &rest args)
   (apply #'post post (or (default-profile multiposter)
                          (alexandria:hash-table-values (clients multiposter)))
-         args)
-  (push post (posts multiposter)))
+         args))
 
-(defmethod post ((post post) (clients cons) &rest args)
+(defmethod post ((post post) (clients cons) &rest args &key exclude &allow-other-keys)
+  (remf args :exclude)
   (let ((results (loop for client in clients
+                       unless (or (find client exclude) (find (name client) exclude :test #'string-equal))
                        collect (apply #'post post client args))))
     (restart-case (dolist (result results results)
                     (when (failed-p result)
