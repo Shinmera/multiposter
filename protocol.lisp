@@ -28,7 +28,7 @@
     (setf (due-time schedule) (etypecase due-time
                                 (null 0)
                                 (integer due-time)
-                                (string (parse-timestring due-time)))))
+                                (string (org.shirakumo.fuzzy-dates:parse due-time :errorp T)))))
   (when post-object-p
     (setf (post-object schedule) (etypecase post-object
                                    (post post-object)

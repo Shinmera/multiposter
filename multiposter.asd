@@ -42,4 +42,5 @@
                :lichat-tcp-client
                :tooter
                :studio-client
-               :humbler))
+               :humbler
+               :fuzzy-dates))

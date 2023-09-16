@@ -17,55 +17,6 @@
      (let ,(loop for var in vars collect `(,var (when ,var (parse-integer ,var))))
        ,@body)))
 
-(defun parse-timestring (string)
-  (or
-   ;; Single integer relative or absolute unix time
-   (with-integers-bound (stamp) ("^(\\d+)$" string)
-     (if (< stamp (* 60 60 24 7 365 50))
-         (+ stamp (get-universal-time))
-         (+ stamp (encode-universal-time 0 0 0 1 1 1970 NIL))))
-   ;; Relative d/m/h/s specification
-   (with-integers-bound (d h m s) ("^in(:? +(:?(\\d+) *(:?d|days?)))?(:?,? +(:?(\\d+) *(:?h|hours?)))?(:?,? +(:?(\\d+) *(:?m|mins?|minutes?)))?(:?,? +(:?(\\d+) *(:?s|sec|seconds?)))?$" string)
-     (+ (get-universal-time)
-        (* 60 60 24 (or d 0))
-        (* 60 60 (or h 0))
-        (* 60 (or m 0))
-        (* 1 (or s 0))))
-   ;; Date/Time spec. Omitted values are computed based on current time
-   (with-integers-bound (d o y h m s) ("^(:?(\\d+)[./-](\\d+)(:?[./-](\\d+))?[Tt\\- ]+)?(\\d+):(\\d+)(:?:(\\d+))?$" string)
-     (multiple-value-bind (ls lm lh ld lo ly) (decode-universal-time (get-universal-time))
-       (let ((time (encode-universal-time (or s ls) (or m lm) (or h lh) (or d ld) (or o lo) (or y ly))))
-         (when (and y (< 100 y))
-           (incf y 2000))
-         ;; If the hour is in the past, assume we want to post on the next day instead.
-         (when (and h (< lh h) (= ld (or d ld)) (= lo (or o lo)) (= ly (or y ly)))
-           (incf time (* 60 60 24)))
-         time)))
-   ;; Same as before but reversed order
-   (with-integers-bound (h m s d o y) ("^(:?(\\d+):(\\d+)(:?:(\\d+))?[Tt\\- ]+)?(\\d+)[./-](\\d+)(:?[./-](\\d+))?$" string)
-     (multiple-value-bind (ls lm lh ld lo ly) (decode-universal-time (get-universal-time))
-       (let ((time (encode-universal-time (or s ls) (or m lm) (or h lh) (or d ld) (or o lo) (or y ly))))
-         (when (and y (< 100 y))
-           (incf y 2000))
-         ;; If the hour is in the past, assume we want to post on the next day instead.
-         (when (and h (< lh h) (= ld (or d ld)) (= lo (or o lo)) (= ly (or y ly)))
-           (incf time (* 60 60 24)))
-         time)))
-   ;; Welp.
-   (error "Don't know how to parse ~a
-Valid formats include:
-
-  2                 (meaning in 2 seconds)
-  1694799940        (meaning at this unix time)
-  in 10 seconds
-  in 6d,5m
-  10:00             (meaning at 10:00AM today or tomorrow, if already in the past)
-  10:00 18.11.2023
-  18.11.2023        (meaning at the current time on that date)
-  18/11/23 20:00
-  18-11-2023T20:00:24
-" string)))
-
 (defun file-type-p (thing types)
   (let ((thing (etypecase thing
                  (pathname (file-namestring thing))
