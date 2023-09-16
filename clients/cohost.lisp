@@ -1,11 +1,14 @@
 (in-package #:org.shirakumo.multiposter)
 
-(define-client cohost (cohost:client)
-  ((blog :initarg :blog :initform NIL :accessor blog)
+(define-client cohost (client)
+  ((client :initform (make-instance 'cohost:client) :accessor client)
    (page :initarg :page :initform NIL :accessor page)))
 
+(defmethod shared-initialize :after ((client cohost) slots &key (token NIL token-p))
+  (when token-p (setf (cohost:token (client client)) token)))
+
 (defmethod initargs append ((client cohost))
-  (list :token (cohost:token client)
+  (list :token (cohost:token (client client))
         :page (page client)))
 
 (defclass cohost-result (result)
@@ -22,7 +25,7 @@
 
 (defmethod post ((post image-post) (client cohost) &key verbose)
   (when verbose (verbose "Posting to cohost page ~a" (page client)))
-  (let ((post (cohost:make-post (or (find (page client) (cohost:pages client) :key #'cohost:handle :test #'string-equal)
+  (let ((post (cohost:make-post (or (find (page client) (cohost:pages (client client)) :key #'cohost:handle :test #'string-equal)
                                     (error "Unknown cohost page: ~a" (page client)))
                                 :title (title post)
                                 :tags (tags post) 
@@ -35,7 +38,7 @@
 
 (defmethod post ((post text-post) (client cohost) &key verbose)
   (when verbose (verbose "Posting to cohost page ~a" (page client)))
-  (let ((post (cohost:make-post (or (find (page client) (cohost:pages client) :key #'cohost:handle :test #'string-equal)
+  (let ((post (cohost:make-post (or (find (page client) (cohost:pages (client client)) :key #'cohost:handle :test #'string-equal)
                                     (error "Unknown cohost page: ~a" (page client)))
                                 :title (title post)
                                 :tags (tags post) 
@@ -44,16 +47,16 @@
     (make-instance 'cohost-result :post post :url (cohost:url post))))
 
 (defmethod ready-p ((client cohost))
-  (not (null (cohost:token client))))
+  (not (null (cohost:token (client client)))))
 
 (defmethod setup ((client cohost) &rest args)
   (cond ((and (null args) (not (ready-p client)))
          (loop (handler-case
-                   (progn (cohost:login client (query "Enter the email address") (query "Enter the password"))
+                   (progn (cohost:login (client client) (query "Enter the email address") (query "Enter the password"))
                           (return))
                  (error ()
                    (format *query-io* "~&Failed to log in. Try again."))))
          (setf (page client) (query "Enter the handle of the page to post on"
-                                    :default (cohost:handle (cohost:default-page client)))))
+                                    :default (cohost:handle (cohost:default-page (client client))))))
         (T
          (apply #'reinitialize-instance client args))))
