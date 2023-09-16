@@ -7,7 +7,7 @@
    :authorize-uri NIL
    :access-token-uri NIL))
 
-(defmethod shared-initialize :after ((client client) slots &key (base-url (base-url client)))
+(defmethod shared-initialize :after ((client reader) slots &key (base-url (base-url client)))
   (setf base-url (string-right-trim "/" base-url))
   (setf (slot-value client 'base-url) base-url)
   (unless (north:request-token-uri client)
