@@ -329,21 +329,24 @@ This is multiposer v~a running on ~a ~a, developed by
                                   (invoke-debugger e)))))
           (destructuring-bind (command . args) args
             (let ((cmdfun (find-symbol (format NIL "~a/~:@(~a~)" 'main command) #.*package*)))
-              (unless cmdfun
-                (error "No command named ~s." command))
-              (let ((*multiposter* (load-config NIL)))
-                (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
-                                                         :chars '(#\# :tag
-                                                                  #\a :abort-on-failure
-                                                                  #\c :client
-                                                                  #\d :description
-                                                                  #\e :exclude
-                                                                  #\f :footer
-                                                                  #\h :header
-                                                                  #\p :profile
-                                                                  #\s :schedule
-                                                                  #\t :title
-                                                                  #\v :verbose)))))))
+              (cond ((null cmdfun)
+                     (error "No command named ~s." command))
+                    ((eql cmdfun #'main/help)
+                     (main/help))
+                    (T
+                     (let ((*multiposter* (load-config NIL)))
+                       (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
+                                                                :chars '(#\# :tag
+                                                                         #\a :abort-on-failure
+                                                                         #\c :client
+                                                                         #\d :description
+                                                                         #\e :exclude
+                                                                         #\f :footer
+                                                                         #\h :header
+                                                                         #\p :profile
+                                                                         #\s :schedule
+                                                                         #\t :title
+                                                                         #\v :verbose)))))))))
       (error (e)
         (format *error-output* "~&ERROR: ~a~%" e)
         (uiop:quit 2)))
