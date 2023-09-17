@@ -1,5 +1,5 @@
 (asdf:defsystem multiposter
-  :version "1.0.0"
+  :version "2.1.0"
   :license "zlib"
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"

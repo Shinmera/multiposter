@@ -2,7 +2,7 @@
 
 (defun main/post (thing &key title profile description tag schedule abort-on-failure verbose exclude)
   (labels ((post! (post target)
-             (let ((results (post post target :verbose verbose :exclude exclude)))
+             (let ((results (post post target :verbose verbose :exclude (enlist exclude))))
                (dolist (result results results)
                  (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))
            (post (type &rest args)
@@ -154,7 +154,9 @@
         (verbose "No more scheduled posts left."))))
 
 (defun main/help ()
-  (format T "== Commands ==
+  (format T "multiposter [command] [option...]
+
+== Commands ==
 
 post                  Make a new post
   [url | file | files | text]
@@ -253,9 +255,15 @@ help                  Shows this help listing
 == Environment variables ==
 
 DEBUG                 When set, will enter the debugger on error
-MULTIPOSTER_CONFIG    The path to the configuration file.
+MULTIPOSTER_CONFIG    The path to the configuration file. Defaults,
+                      depending on the presence of the envvars, to
+
+  $APPDATA/multiposter/multiposter.lisp
+  $XDG_CONFIG_HOME/multiposter/multiposter.lisp
+  $HOME/.config/multiposter/multiposter.lisp
 
 == Post scheduling ==
+
 When a post is created with a scheduling time in the future, it will
 not be posted to the services. In fact, it will only be recorded in
 the local configuration, and Multiposter will exit.
@@ -268,7 +276,17 @@ local configuration.
 
 When process is invoked with the verbose flag, it will also note the
 timestamp for the next due post, if any, as well as how overdue each
-scheduled post has been."))
+scheduled post has been.
+
+== About ==
+
+This is multiposer v~a running on ~a ~a, developed by
+~a, accessible at
+~a~%"
+          #.(asdf:component-version (asdf:find-system "multiposter"))
+          #.(lisp-implementation-type) #.(lisp-implementation-version)
+          #.(asdf:system-author (asdf:find-system "multiposter"))
+          #.(asdf:system-homepage (asdf:find-system "multiposter"))))
 
 (defun parse-args (args &key flags chars)
   (let ((kargs ())

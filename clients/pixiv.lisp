@@ -3,10 +3,11 @@
 (define-client pixiv (client)
   ((cookie-jar :initform (make-instance 'drakma:cookie-jar) :reader cookie-jar)))
 
-(defmethod shared-initialize :after ((client pixiv) slots &key cookies)
-  (loop for (k . v) in cookies
-        do (push (make-instance 'drakma:cookie :domain "www.pixiv.net" :path "/" :name k :value v)
-                 (drakma:cookie-jar-cookies (cookie-jar client)))))
+(defmethod shared-initialize :after ((client pixiv) slots &key (cookies NIL cookies-p))
+  (when cookies-p
+    (setf (drakma:cookie-jar-cookies (cookie-jar client))
+          (loop for (k . v) in cookies
+                collect (make-instance 'drakma:cookie :domain "www.pixiv.net" :path "/" :name k :value v)))))
 
 (defmethod initargs append ((client pixiv))
   (list :cookies (loop for cookie in (drakma:cookie-jar-cookies (cookie-jar client))
