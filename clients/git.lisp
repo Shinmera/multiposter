@@ -4,12 +4,13 @@
   ())
 
 (defun %git (verbose client &rest args)
-  (uiop:run-program (list* "git" "-C" (pathname-utils:native-namestring (path client))
-                           (loop for arg in args
-                                 collect (etypecase arg
-                                           (string arg)
-                                           (pathname (pathname-utils:native-namestring arg)))))
-                    :output (if verbose *error-output*) :error-output (if verbose *error-output*)))
+  (let ((cmd (list* "git" "-C" (pathname-utils:native-namestring (path client))
+                    (loop for arg in args
+                          collect (etypecase arg
+                                    (string arg)
+                                    (pathname (pathname-utils:native-namestring arg)))))))
+    (when verbose (verbose "Running ~{~a~^ ~}" cmd))
+    (uiop:run-program cmd :output (if verbose *error-output*) :error-output (if verbose *error-output*))))
 
 (defun add-git-file (source client &optional verbose)
   (let ((file (cond ((pathname-utils:subpath-p source (path client))
@@ -24,10 +25,7 @@
     file))
 
 (defun git-current-commit (client)
-  (string-right-trim
-   '(#\Linefeed #\Return)
-   (uiop:run-program (list "git" "-C" (pathname-utils:native-namestring (path client)) "rev-parse" "HEAD")
-                     :output :string)))
+  (run* "git" "-C" (pathname-utils:native-namestring (path client)) "rev-parse" "HEAD"))
 
 (defclass git-result (file-result)
   ((commit :initarg :commit :initform NIL :accessor commit)))
@@ -41,9 +39,11 @@
 (defmethod post :around ((post post) (client git) &key verbose)
   (%git verbose client "pull")
   (let ((result (call-next-method)))
-    (%git verbose client "commit" "-m" (compose-post post :tag-separator ", " :tag-format "~a"))
-    (setf (commit result) (git-current-commit client))
-    (%git verbose client "push")
+    (let ((status (run* "git" "-C" (pathname-utils:native-namestring (path client)) "--porcelain=v1")))
+      (when (cl-ppcre:scan "^A" status)
+        (%git verbose client "commit" "-m" (compose-post post :tag-separator ", " :tag-format "~a"))
+        (setf (commit result) (git-current-commit client))
+        (%git verbose client "push")))
     result))
 
 (defmethod post ((post text-post) (client git) &key verbose)

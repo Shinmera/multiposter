@@ -5,7 +5,7 @@
 
 (defgeneric add-tag (tag post))
 (defgeneric due-p (post))
-(defgeneric post (post client &key verbose))
+(defgeneric post (post client &key exclude verbose &allow-other-keys))
 (defgeneric ready-p (client))
 (defgeneric setup (client &rest args))
 (defgeneric undo (result))
@@ -32,7 +32,7 @@
   (when post-object-p
     (setf (post-object schedule) (etypecase post-object
                                    (post post-object)
-                                   (cons (apply #'make-instance :multiposter multiposter post-object))))))
+                                   (cons (apply #'make-instance (car post-object) :multiposter multiposter (cdr post-object)))))))
 
 (defmethod print-object ((schedule schedule) stream)
   (print-unreadable-object (schedule stream :type T :identity T)

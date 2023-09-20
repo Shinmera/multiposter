@@ -48,7 +48,7 @@
                    (format out "~&~%")))))))
 
 (defun enlist (list &rest args)
-  (if (consp list)
+  (if (listp list)
       list
       (list* list args)))
 
@@ -184,3 +184,6 @@
   (with-output-to-string (out)
     (dotimes (i length)
       (write-char (alexandria:random-elt "abcdefghikmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") out))))
+
+(defun run* (program &rest args)
+  (string-right-trim '(#\Linefeed #\Return) (uiop:run-program (list* program args) :output :string)))

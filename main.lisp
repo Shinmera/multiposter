@@ -1,63 +1,59 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defun main/post (thing &key title profile description tag schedule abort-on-failure verbose exclude)
+(defun main/post (thing &key title profile client description tag schedule abort-on-failure verbose exclude)
   (labels ((post! (post target)
              (let ((results (post post target :verbose verbose :exclude (enlist exclude))))
                (dolist (result results results)
                  (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))
-           (post (type &rest args)
-             (handler-bind ((error (lambda (e)
-                                     (format *error-output* "~&ERROR: ~a~%" e)
-                                     (cond ((uiop:getenv "DEBUG")
-                                            (invoke-debugger e))
-                                           (abort-on-failure
-                                            (abort e))
-                                           (T
-                                            (continue e))))))
-               (let ((target (if profile
-                                 (or (find-profile profile *multiposter*)
-                                     (error "Unknown profile: ~a" profile))
-                                 *multiposter*))
-                     (post (apply #'make-instance type
-                                  :title title
-                                  :description description
-                                  :tags (parse-tags tag)
-                                  args)))
-                 (cond ((null schedule)
-                        (post! post target))
-                       (T
-                        (let ((schedule (make-instance 'schedule :due-time schedule :target target :post post)))
-                          (cond ((due-p schedule)
-                                 (post! post target))
-                                (T
-                                 (add-schedule schedule T)
-                                 (save-config)
-                                 (format *standard-output* "~&Scheduled as ~a on ~a~%" (name schedule) (timestamp (due-time schedule))))))))))))
+           (post-type (type &rest args)
+             (let ((target (cond (profile
+                                  (or (find-profile profile *multiposter*)
+                                      (error "Unknown profile: ~a" profile)))
+                                 (client
+                                  (or (find-client client *multiposter*)
+                                      (error "Unknown client: ~a" client)))
+                                 (T
+                                  *multiposter*)))
+                   (post (apply #'make-instance type
+                                :title title
+                                :description description
+                                :tags (parse-tags tag)
+                                args)))
+               (cond ((null schedule)
+                      (post! post target))
+                     (T
+                      (let ((schedule (make-instance 'schedule :due-time schedule :target target :post post)))
+                        (cond ((due-p schedule)
+                               (post! post target))
+                              (T
+                               (add-schedule schedule T)
+                               (save-config)
+                               (format *standard-output* "~&Scheduled as ~a on ~a~%" (name schedule) (timestamp (due-time schedule)))))))))))
     (cond ((listp thing)
-           (post 'image-post :files (loop for path in thing
-                                          collect (pathname-utils:parse-native-namestring path))))
+           (post-type 'image-post :files (loop for path in thing
+                                               collect (pathname-utils:parse-native-namestring path))))
           ((cl-ppcre:scan "^\\(.*\\)" thing)
-           (post 'image-post :files (loop for path in (read-from-string thing)
-                                          collect (etypecase path
-                                                    (pathname path)
-                                                    (string (pathname-utils:parse-native-namestring path))
-                                                    (symbol (pathname-utils:parse-native-namestring (string-downcase path)))))))
+           (post-type 'image-post :files (loop for path in (read-from-string thing)
+                                               collect (etypecase path
+                                                         (pathname path)
+                                                         (string (pathname-utils:parse-native-namestring path))
+                                                         (symbol (pathname-utils:parse-native-namestring (string-downcase path)))))))
           ((cl-ppcre:scan "^https?://" thing)
-           (post 'link-post :url thing))
+           (post-type 'link-post :url thing))
           ((file-type-p thing *image-types*)
-           (post 'image-post :files (list (pathname-utils:parse-native-namestring thing))))
+           (post-type 'image-post :files (list (pathname-utils:parse-native-namestring thing))))
           ((file-type-p thing *video-types*)
-           (post 'video-post :file (pathname-utils:parse-native-namestring thing)))
+           (post-type 'video-post :file (pathname-utils:parse-native-namestring thing)))
           ((file-type-p thing *text-types*)
-           (post 'text-post :file (pathname-utils:parse-native-namestring thing)))
+           (post-type 'text-post :file (pathname-utils:parse-native-namestring thing)))
           (T
            (setf description (merge-paragraphs thing description))
-           (post 'text-post)))))
+           (post-type 'text-post)))))
 
 (defun main/add (kind name/type &key client tag header footer verbose ((&rest rest)))
   (cond ((string-equal kind "profile")
          (add-profile (list :name name/type
-                            :clients client 
+                            :clients (parse-tags client)
                             :tags (parse-tags tag)
                             :header header
                             :footer footer)

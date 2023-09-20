@@ -7,7 +7,7 @@
   (list :path (path client)))
 
 (defclass file-result (result)
-  ((files :initarg :files :accessor files)))
+  ((files :initarg :files :initform () :accessor files)))
 
 (defmethod undo ((result file-result))
   (dolist (file (files result))
