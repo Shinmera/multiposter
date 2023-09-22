@@ -52,7 +52,7 @@
     (dolist (file (files post) result)
       (when verbose (verbose "Sending ~a" file))
       (with-lichat-response (message client)
-          (lichat-tcp-client:s client 'data :channel (channel client) :payload file :filename (file-namestring file))
+          (lichat-tcp-client:s-data client (channel client) file)
         (push (lichat-protocol:id message) (message-ids result))))))
 
 (defmethod post ((post video-post) (client lichat) &key verbose)
@@ -60,7 +60,7 @@
         (file (file post)))
     (when verbose (verbose "Sending ~a" file))
     (with-lichat-response (message client)
-        (lichat-tcp-client:s client 'data :channel (channel client) :payload file :filename (file-namestring file))
+        (lichat-tcp-client:s-data client (channel client) file)
       (push (lichat-protocol:id message) (message-ids result)))))
 
 (defmethod post ((post link-post) (client lichat) &rest args)
