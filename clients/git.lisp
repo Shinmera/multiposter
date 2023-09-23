@@ -39,7 +39,7 @@
 (defmethod post :around ((post post) (client git) &key verbose)
   (%git verbose client "pull")
   (let ((result (call-next-method)))
-    (let ((status (run* "git" "-C" (pathname-utils:native-namestring (path client)) "--porcelain=v1")))
+    (let ((status (run* "git" "-C" (pathname-utils:native-namestring (path client)) "status" "--porcelain=v1")))
       (when (cl-ppcre:scan "^A" status)
         (%git verbose client "commit" "-m" (compose-post post :tag-separator ", " :tag-format "~a"))
         (setf (commit result) (git-current-commit client))
