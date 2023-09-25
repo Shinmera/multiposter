@@ -18,7 +18,7 @@
 
 (define-client lichat (client lichat-tcp-client:client)
   ((channel :initarg :channel :accessor channel))
-  (:default-initargs :hostname NIL :thread T))
+  (:default-initargs :hostname NIL :thread :local))
 
 (defmethod initargs append ((client lichat))
   (list :hostname (lichat-tcp-client:hostname client)
