@@ -95,6 +95,11 @@ See MULTIPOSTER (type)")
   (type post
     "Superclass for all post types.
 
+A post encapsulates all necessary information to push to a service in
+a more structured way. Each client should piece together the
+information according to the service's own distinct fields using
+COMPOSE-POST.
+
 See TITLE
 See HEADER
 See FOOTER
@@ -475,6 +480,13 @@ function returns true.")
 
 ;; clients
 (docs:define-docs
+  (type cohost
+    "Client that posts to cohost.org
+
+Tags are filtered to not contain any commas.
+
+See CLIENT (type)")
+  
   (type dummy
     "Dummy client that doesn't do anything.
 
@@ -503,7 +515,7 @@ See FILE (type)")
     "Client that connects to a Lichat server and posts to a channel.
 
 This will split the post content and optional payloads across multiple
-updates.
+updates. Tags are omitted from the messages.
 
 See CLIENT (type)")
 
@@ -515,6 +527,13 @@ message limit. Tags are filtered to be alphanumeric only.
 
 See CLIENT (type)
 See COMPOSE-POST-TEXT")
+
+  (type reader
+    "Client that posts to a Reader blog.
+
+This only supports TEXT-POSTs.
+
+See CLIENT (type)")
 
   (type studio
     "Client that uploads to a Studio gallery.
@@ -528,5 +547,14 @@ See CLIENT (type)")
     "Client that posts to Tumblr.
 
 Tags are filtered to not contain any commas.
+
+See CLIENT (type)")
+
+  (type webdav
+    "Client that posts to a WebDAV server.
+
+This can use either an Authorization header, or HTTP Basic
+authentication. It will upload the files using POST requests, and
+remove them on failure using DELETE requests.
 
 See CLIENT (type)"))
