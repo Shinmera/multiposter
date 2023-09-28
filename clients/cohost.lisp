@@ -34,7 +34,7 @@
                                                        for desc in (file-descriptions post)
                                                        collect (make-instance 'cohost:attachment :file file :alt-text desc))
                                                  (list (compose-post post :exclude-title T :exclude-tags T))))))
-    (make-instance 'cohost-result :post post :url (cohost:url post))))
+    (make-instance 'cohost-result :client client :post post :url (cohost:url post))))
 
 (defmethod post ((post text-post) (client cohost) &key verbose)
   (when verbose (verbose "Posting to cohost page ~a" (page client)))
@@ -44,7 +44,7 @@
                                 :tags (tags post) 
                                 :content-warnings (enlist (content-warning post))
                                 :content (compose-post post :exclude-title T :exclude-tags T))))
-    (make-instance 'cohost-result :post post :url (cohost:url post))))
+    (make-instance 'cohost-result :client client :post post :url (cohost:url post))))
 
 (defmethod ready-p ((client cohost))
   (not (null (cohost:token (client client)))))
