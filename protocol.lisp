@@ -239,6 +239,7 @@
                        (result (apply #'call-next-method (make-like post :tags tags) client args)))
                   (etypecase result
                     (result result)
+                    ((or condition (eql :failure)) (make-instance 'result :client client :post post :url NIL))
                     (null (make-instance 'result :client client :post post :url ""))
                     (string (make-instance 'result :client client :post post :url result))
                     (pathname (make-instance 'result :client client :post post :url (path-url result)))))

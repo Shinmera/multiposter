@@ -47,7 +47,7 @@
                          ("sexual" . "")
                          ("title" . ,(limit (or (title post) (file-namestring (first (files post)))) 32))
                          ("tag" . ,(format NIL "~{~a~^ ~}" (or (limit (tags post) 10) (list "original"))))
-                         ("comment" . ,(or (description post) ""))
+                         ("comment" . ,(or* (description post) "-"))
                          ("rating" . "1")
                          ("mode" . "upload")
                          ("suggested_tags" . "")
@@ -78,9 +78,9 @@
                    ((or (search "application/json" content-type)
                         (search "text/javascript" content-type))
                     (let ((data (yason:parse stream)))
-                      (when (gethash "error" data)
-                        (error "Submission failed:~%  ~a" (gethash "error" data)))
-                      NIL))
+                      (if (gethash "error" data)
+                          :failure
+                          NIL)))
                    ((search "text/html" content-type)
                     (error "Submission failed. You might not be logged in anymore."))
                    (T
