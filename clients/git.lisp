@@ -13,7 +13,9 @@
     (uiop:run-program cmd :output (if verbose *error-output*) :error-output (if verbose *error-output*))))
 
 (defun add-git-file (source client &optional verbose)
-  (let ((file (cond ((pathname-utils:subpath-p source (path client))
+  (let ((file (cond ((pathname-utils:subpath-p
+                      (uiop:truenamize source)
+                      (uiop:truenamize (path client)))
                      source)
                     (T
                      (let ((target (make-pathname :name (pathname-name source) 
