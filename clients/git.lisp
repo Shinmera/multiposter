@@ -37,7 +37,7 @@
   (null (commit result)))
 
 (defmethod post :around ((post post) (client git) &key verbose)
-  (%git verbose client "pull")
+  (ignore-errors (%git verbose client "pull" "--ff-only"))
   (let ((result (call-next-method)))
     (let ((status (run* "git" "-C" (pathname-utils:native-namestring (path client)) "status" "--porcelain=v1")))
       (when (cl-ppcre:scan "^A" status)
