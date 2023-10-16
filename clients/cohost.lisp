@@ -47,7 +47,8 @@
     (make-instance 'cohost-result :client client :post post :url (cohost:url post))))
 
 (defmethod ready-p ((client cohost))
-  (not (null (cohost:token (client client)))))
+  (and (not (null (cohost:token (client client))))
+       (ignore-errors (cohost:default-page (client client)))))
 
 (defmethod setup ((client cohost) &rest args)
   (cond ((and (null args) (not (ready-p client)))
