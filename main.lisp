@@ -2,7 +2,8 @@
 
 (defun main/post (thing &key title profile client description tag schedule abort-on-failure verbose exclude)
   (labels ((post! (post target)
-             (let ((results (post post target :verbose verbose :exclude (enlist exclude))))
+             (let ((results (handler-bind ((error #'continue))
+                              (post post target :verbose verbose :exclude (enlist exclude)))))
                (dolist (result results results)
                  (format *standard-output* "~&~a: ~a~%" (name (client result)) (url result)))))
            (post-type (type &rest args)
