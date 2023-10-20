@@ -331,9 +331,7 @@
         NIL)
       (continue ()
         :report "Ignore the failure"
-        (loop for result in results
-              unless (failed-p result)
-              collect result)))))
+        results))))
 
 (defmethod post (thing (default (eql T)) &rest args)
   (apply #'post thing *multiposter* args))
