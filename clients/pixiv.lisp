@@ -3,7 +3,12 @@
 (define-client pixiv (client)
   ((cookie-jar :initform (make-instance 'drakma:cookie-jar) :reader cookie-jar)))
 
-(defmethod shared-initialize :after ((client pixiv) slots &key (cookies NIL cookies-p))
+(defmethod shared-initialize :after ((client pixiv) slots &key cookie-string (cookies NIL cookies-p))
+  (when cookie-string
+    (setf (drakma:cookie-jar-cookies (cookie-jar client))
+          (loop for cookie in (cl-ppcre:split " *; *" cookie-string)
+                collect (cl-ppcre:register-groups-bind (k v) ("(.*?)=(.*)" cookie)
+                          (make-instance 'drakma:cookie :domain "www.pixiv.net" :path "/" :name k :value v)))))
   (when cookies-p
     (setf (drakma:cookie-jar-cookies (cookie-jar client))
           (loop for (k . v) in cookies
@@ -97,10 +102,7 @@
          (format *query-io* "~&Pixiv login required.~%")
          (let* ((raw (query "Please visit https://www.pixiv.net, log in, and then run the following Javascript code on the page:
   console.log(document.cookie)
-This should print the cookie jar into the console. Copy it, and paste it here."))
-                (cookies (loop for cookie in (cl-ppcre:split " *; *" raw)
-                               collect (cl-ppcre:register-groups-bind (key val) ("(.*?)=(.*)" cookie)
-                                         (cons key val)))))
-           (reinitialize-instance client :cookies cookies)))
+This should print the cookie jar into the console. Copy it, and paste it here.")))
+           (reinitialize-instance client :cookie-string raw)))
         (T
          (apply #'reinitialize-instance client args))))
