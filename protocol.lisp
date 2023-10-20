@@ -260,11 +260,13 @@
   (setf (tags profile) tags)
   (setf (clients profile) (if clients
                               (loop for client in clients
-                                    collect (etypecase client
-                                              (client client)
-                                              ((or symbol string)
-                                               (or (find-client client multiposter)
-                                                   (error "Unknown client: ~a" client)))))
+                                    for resolved = (etypecase client
+                                                     (client client)
+                                                     ((or symbol string)
+                                                      (or (find-client client multiposter)
+                                                          (cerror "Ignore the unknown client" "Unknown client: ~a" client))))
+                                    when resolved
+                                    collect resolved)
                               (clients multiposter))))
 
 (defmethod print-object ((profile profile) stream)
@@ -353,6 +355,10 @@
            (setf (find-schedule (name schedule) multiposter) NIL)))
         (T
          (add-schedule schedule multiposter))))
+
+(defmethod add-client :around ((client client) (multiposter multiposter))
+  (with-simple-restart (abort "Don't add ~a" client)
+    (call-next-method)))
 
 (defmethod add-client :before ((client client) (multiposter multiposter))
   (when (gethash (string (name client)) (clients multiposter))
