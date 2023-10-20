@@ -61,6 +61,7 @@
 
 (defmethod setup ((client reader) &rest args)
   (cond ((null args)
+         (format *query-io* "~&Reader login required.~%")
          (setf (slot-value client 'base-url) (query "Enter the Reader base" :default "https://reader.tymoon.eu"))
          (setf (north:key client) (query "Enter the oAuth app key"))
          (setf (north:secret client) (query "Enter the oAuth app secret"))

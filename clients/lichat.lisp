@@ -73,6 +73,7 @@
 
 (defmethod setup ((client lichat) &rest args)
   (cond ((and (null args) (null (lichat-tcp-client:hostname client)))
+         (format *query-io* "~&Lichat login required.~%")
          (setf (lichat-tcp-client:hostname client) (query "Enter the lichat server's hostname" :default "chat.tymoon.eu"))
          (setf (lichat-tcp-client:port client) (query "Enter the lichat server's port" :default lichat-tcp-client:*default-port* :coerce #'parse-integer))
          (setf (lichat-tcp-client:username client) (query "Enter the username"))

@@ -51,6 +51,7 @@
 
 (defmethod setup ((client tumblr) &rest args)
   (cond ((null args)
+         (format *query-io* "~&Tumblr login required.~%")
          (let ((humbler:*client* client))
            (setf (blog client) (query "Enter the blog name" :nullable T))
            (setf (north:key client) (query "Enter the oAuth app key"))

@@ -59,6 +59,7 @@
 
 (defmethod setup ((client mastodon) &rest args)
   (cond ((and (null args) (null (tooter:access-token client)))
+         (format *query-io* "~&Mastodon login required.~%")
          (setf (tooter:base client) (query "Enter the Mastodon server name" :default "mastodon.social"))
          (setf (tooter:name client) (query "Enter the client name" :default "Multiposter"))
          (let ((url (nth-value 1 (tooter:authorize client))))

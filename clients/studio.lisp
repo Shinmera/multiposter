@@ -35,6 +35,7 @@
 
 (defmethod setup ((client studio) &rest args)
   (cond ((null args)
+         (format *query-io* "~&Studio login required.~%")
          (setf (slot-value client 'studio-client:api-base) (query "Enter the Studio API base" :default "https://studio.tymoon.eu/api"))
          (setf (north:key client) (query "Enter the oAuth app key"))
          (setf (north:secret client) (query "Enter the oAuth app secret"))

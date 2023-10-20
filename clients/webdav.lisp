@@ -56,6 +56,7 @@
 
 (defmethod setup ((client webdav) &rest args)
   (cond ((and (null args) (null (base-url client)))
+         (format *query-io* "~&WebDAV login required.~%")
          (setf (base-url client) (query "Please enter the base URL"))
          (loop
           (let ((method (query "Choose the authentication method: none, basic, header" :default "basic")))

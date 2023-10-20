@@ -52,6 +52,7 @@
 
 (defmethod setup ((client cohost) &rest args)
   (cond ((and (null args) (not (ready-p client)))
+         (format *query-io* "~&Cohost login required.~%")
          (loop (handler-case
                    (progn (cohost:login (client client) (query "Enter the email address") (query "Enter the password"))
                           (return))

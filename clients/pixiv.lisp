@@ -94,6 +94,7 @@
 
 (defmethod setup ((client pixiv) &rest args)
   (cond ((and (null args) (= 0 (length (drakma:cookie-jar-cookies (cookie-jar client)))))
+         (format *query-io* "~&Pixiv login required.~%")
          (let* ((raw (query "Please visit https://www.pixiv.net, log in, and then run the following Javascript code on the page:
   console.log(document.cookie)
 This should print the cookie jar into the console. Copy it, and paste it here."))
