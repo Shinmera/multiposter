@@ -185,7 +185,8 @@
 
 (defclass client ()
   ((name :initarg :name :accessor name)
-   (post-tags :initform () :accessor post-tags)))
+   (post-tags :initform () :accessor post-tags)
+   (enabled-p :initarg :enabled-p :initform T :accessor enabled-p)))
 
 (defmethod initialize-instance :after ((client client) &key post-tags setup)
   (unless (slot-boundp client 'name)
@@ -317,7 +318,9 @@
 (defmethod post ((post post) (clients cons) &rest args &key exclude &allow-other-keys)
   (remf args :exclude)
   (let ((results (loop for client in clients
-                       unless (or (find client exclude) (find (name client) exclude :test #'string-equal))
+                       unless (or (find client exclude)
+                                  (find (name client) exclude :test #'string-equal)
+                                  (not (enabled-p client)))
                        collect (apply #'post post client args))))
     (restart-case (dolist (result results results)
                     (when (failed-p result)
@@ -364,7 +367,8 @@
   (unless (ready-p client)
     (setup client)
     (unless (ready-p client)
-      (cerror "Add the client anyway" "The client ~a is not ready." client))))
+      (cerror "Disable the client" "The client ~a is not ready." client)
+      (setf (enabled-p client) NIL))))
 
 (defmethod add-client ((client client) (multiposter multiposter))
   (setf (gethash (string (name client)) (clients multiposter)) client))
