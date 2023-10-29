@@ -331,7 +331,8 @@ This is multiposer v~a running on ~a ~a, developed by
                     ((eql cmdfun #'main/help)
                      (main/help))
                     (T
-                     (let ((*multiposter* (load-config NIL)))
+                     (let ((*multiposter* (handler-bind ((error #'continue))
+                                            (load-config NIL))))
                        (apply #'funcall cmdfun (parse-args args :flags '(:verbose :abort-on-failure)
                                                                 :chars '(#\# :tag
                                                                          #\a :abort-on-failure
