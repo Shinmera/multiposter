@@ -1,6 +1,6 @@
 (in-package #:org.shirakumo.multiposter)
 
-(defun main/post (thing &key title profile client description tag schedule abort-on-failure verbose exclude)
+(defun main/post (thing &key title profile client description tag warning schedule abort-on-failure verbose exclude)
   (labels ((post! (post target)
              (let ((results (handler-bind ((error #'continue))
                               (enlist (post post target :verbose verbose :exclude (enlist exclude))))))
@@ -19,6 +19,7 @@
                                 :title title
                                 :description description
                                 :tags (parse-tags tag)
+                                :content-warning warning
                                 args)))
                (cond ((null schedule)
                       (post! post target))
@@ -172,6 +173,7 @@ post                  Make a new post
                         separated by commas. If a tag contains
                         characters that a service does not support,
                         the characters will be removed from the tag
+  -w --warning warning  Specify a content warning for the post.
   -e --exclude client   Do not post to the specified client. Can be
                         specified multiple times to exclude multiple
   -s --schedule time    Schedule the post to be created on a specified
@@ -344,6 +346,7 @@ This is multiposer v~a running on ~a ~a, developed by
                                                                          #\p :profile
                                                                          #\s :schedule
                                                                          #\t :title
+                                                                         #\w :warning
                                                                          #\v :verbose)))))))))
       (error (e)
         (format *error-output* "~&ERROR: ~a~%" e)
