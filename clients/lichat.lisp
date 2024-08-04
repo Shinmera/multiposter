@@ -39,7 +39,7 @@
   (null (message-ids result)))
 
 (defmethod post ((post post) (client lichat) &key verbose)
-  (let ((result (make-instance 'lichat-result :client client :post post :url "?"))
+  (let ((result (make-instance 'lichat-result :client client :post post :url (lichat-tcp-client:url client)))
         (message (compose-post post :exclude-tags T)))
     (when verbose (verbose "Posting message to ~a" (channel client)))
     (with-lichat-response (message client)
