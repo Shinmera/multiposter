@@ -36,3 +36,24 @@
   (let ((*package* #.*package*))
     (ubiquitous:offload file))
   multiposter)
+
+(defmethod ubiquitous:write-storage ((type (eql :lisp)) stream storage)
+  (ubiquitous:print-metadata stream)
+  (let ((*readtable* ubiquitous::*ubiquitous-read-table*))
+    (write storage
+           :stream stream
+           :array T
+           :base 10
+           :case :downcase
+           :circle NIL
+           :escape T
+           :gensym T
+           :length NIL
+           :level NIL
+           :lines NIL
+           :miser-width NIL
+           :pprint-dispatch ubiquitous::*ubiquitous-print-table*
+           :pretty T
+           :radix NIL
+           :readably T
+           :right-margin NIL)))
