@@ -206,7 +206,7 @@
     (format stream "~a" (name client))))
 
 (defmethod initargs append ((client client))
-  (list :name (name client) :post-tags (post-tags client)))
+  (list :name (name client) :enabled-p (enabled-p client) :post-tags (post-tags client)))
 
 (defmacro define-client (name direct-superclasses direct-slots &rest options)
   `(progn (defclass ,name ,direct-superclasses
@@ -364,7 +364,7 @@
 (defmethod add-client :before ((client client) (multiposter multiposter))
   (when (gethash (string (name client)) (clients multiposter))
     (cerror "Replace the client" "A client with the name ~s already exists!" (name client)))
-  (unless (ready-p client)
+  (unless (or (ready-p client) (not (enabled-p client)))
     (setup client)
     (unless (ready-p client)
       (cerror "Disable the client" "The client ~a is not ready." client)
