@@ -54,8 +54,10 @@
   (cond ((and (null args) (not (ready-p client)))
          (format *query-io* "~&Cohost login required.~%")
          (loop (handler-case
-                   (progn (cohost:login (client client) (query "Enter the email address") (query "Enter the password"))
-                          (return))
+                   (progn
+                     (change-class (client client) 'cohost:client)
+                     (cohost:login (client client) (query "Enter the email address") (query "Enter the password"))
+                     (return))
                  (error ()
                    (format *query-io* "~&Failed to log in. Try again."))))
          (setf (page client) (query "Enter the handle of the page to post on"
