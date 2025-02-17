@@ -19,6 +19,7 @@
                (:module "clients"
                 :components ((:file "dummy")
                              (:file "cohost")
+                             (:file "discord")
                              (:file "file")
                              (:file "git")
                              (:file "lichat")
@@ -45,4 +46,6 @@
                :studio-client
                :humbler
                :clohost
-               :fuzzy-dates))
+               :fuzzy-dates
+               :local-time
+               :drakma))
