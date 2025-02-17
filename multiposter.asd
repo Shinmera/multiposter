@@ -18,6 +18,7 @@
                (:file "main")
                (:module "clients"
                 :components ((:file "dummy")
+                             (:file "bsky")
                              (:file "cohost")
                              (:file "file")
                              (:file "git")
@@ -45,4 +46,6 @@
                :studio-client
                :humbler
                :clohost
-               :fuzzy-dates))
+               :fuzzy-dates
+               :local-time
+               :drakma))
