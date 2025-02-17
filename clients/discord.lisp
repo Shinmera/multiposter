@@ -87,21 +87,21 @@
        nil))))
 
 (defun embed-hash-table (title description link colour tags time image-url)
-  (alist-hash-table `(("title" . ,title)
-                      ("description" . ,description)
-                      ,@(when link
-                          (list (cons "url" link)))
-                      ("color" . ,colour)
-                      ("fields" ,(alist-hash-table
-                                  `(("name" . "Tags")
-                                    ("value" . ,(format nil "~{`~a`~^ ~}" tags)))))
-                      ("footer" . ,(alist-hash-table '(("text" . "Multiposter"))))
-                      ,@(when time
-                          (list (cons "timestamp" time)))
-                      ("image" . ,(alist-hash-table `(("url" . ,image-url)))))))
+  (alexandria:alist-hash-table `(("title" . ,title)
+                                 ("description" . ,description)
+                                 ,@(when link
+                                     (list (cons "url" link)))
+                                 ("color" . ,colour)
+                                 ("fields" ,(alexandria:alist-hash-table
+                                             `(("name" . "Tags")
+                                               ("value" . ,(format nil "~{`~a`~^ ~}" tags)))))
+                                 ("footer" . ,(alexandria:alist-hash-table '(("text" . "Multiposter"))))
+                                 ,@(when time
+                                     (list (cons "timestamp" time)))
+                                 ("image" . ,(alexandria:alist-hash-table `(("url" . ,image-url)))))))
 
 (defun message-hash (username avatar message-content embeds suppress-notifications)
-  (let ((ht (alist-hash-table `(("content" . ,message-content)))))
+  (let ((ht (alexandria:alist-hash-table `(("content" . ,message-content)))))
     (when avatar
       (setf (gethash "avatar_url" ht) avatar))
     (when username
