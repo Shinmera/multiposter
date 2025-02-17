@@ -86,31 +86,35 @@
        (warn "Unhandled HTTPS status: ~a" https-status)
        nil))))
 
+(defun json-object-hash-table (specs inputs &optional hash-table-args)
+  (loop with ht = (apply #'make-hash-table hash-table-args)
+        with v = nil
+        for (ht-key input-key . spec) in specs
+        do (cond ((not (keywordp input-key))
+                  (setf (gethash ht-key ht) input-key))
+                 ((setf v (getf inputs input-key))
+                  (setf (gethash ht-key ht) v)))
+        finally (when (plusp (hash-table-count ht))
+                  (return ht))))
+
 (defun embed-hash-table (title description link colour tags time image-url)
-  (alexandria:alist-hash-table `(("title" . ,title)
-                                 ("description" . ,description)
-                                 ,@(when link
-                                     (list (cons "url" link)))
-                                 ("color" . ,colour)
-                                 ("fields" ,(alexandria:alist-hash-table
-                                             `(("name" . "Tags")
-                                               ("value" . ,(format nil "~{`~a`~^ ~}" tags)))))
-                                 ("footer" . ,(alexandria:alist-hash-table '(("text" . "Multiposter"))))
-                                 ,@(when time
-                                     (list (cons "timestamp" time)))
-                                 ("image" . ,(alexandria:alist-hash-table `(("url" . ,image-url)))))))
+  (json-object-hash-table
+   '(("title" :title) ("description" :description) ("url" :link) ("color" :colour)
+     ("fields" :fields) ("footer" :footer) ("timestamp" :time) ("image" :image))
+   (list :title title :description description :link link :colour colour :time time
+         :fields (list (json-object-hash-table
+                        '(("name" "Tags") ("value" :value))
+                        (list :value (format nil "~{`~a`~^ ~}" tags))))
+         :footer (json-object-hash-table '(("text" "Multiposter")) ())
+         :image (json-object-hash-table '(("url" :url)) (list :url image-url)))))
 
 (defun message-hash (username avatar message-content embeds suppress-notifications)
-  (let ((ht (alexandria:alist-hash-table `(("content" . ,message-content)))))
-    (when avatar
-      (setf (gethash "avatar_url" ht) avatar))
-    (when username
-      (setf (gethash "username" ht) username))
-    (when suppress-notifications
-      (setf (gethash "flags" ht) (expt 2 12)))
-    (unless (every #'null embeds)
-      (setf (gethash "embeds" ht) embeds))
-    ht))
+  (json-object-hash-table
+   `(("content" :content) ("avatar_url" :avatar) ("username" :username)
+     ("flags" :suppress-notifications) ("embeds" :embeds))
+   (list :content message-content :avatar avatar :username username
+         :suppress-notifications (when suppress-notifications (expt 2 12))
+         :embeds embeds)))
 
 (defun parse-json-from-bytes (bytes)
   (yason:parse (flexi-streams:octets-to-string bytes :external-format :utf-8)))
@@ -119,7 +123,7 @@
   (let ((response (parse-json-from-bytes
                    (post-to-webhook (url client)
                                     (message-hash (username client) (avatar client) message
-                                                  (list embed-json)
+                                                  (alexandria:ensure-list embed-json)
                                                   suppress-notifications)
                                     ()))))
     (when (server-id client)
@@ -129,7 +133,7 @@
   (let ((response (parse-json-from-bytes
                    (post-to-webhook (url client)
                                     (message-hash (username client) (avatar client) message
-                                                  (list embed-json)
+                                                  (alexandria:ensure-list embed-json)
                                                   suppress-notifications)
                                     paths))))
     (when (server-id client)
@@ -164,7 +168,7 @@
                        (colour client)
                        (tags post)
                        (local-time:format-timestring
-                        (local-time:now)
+                        nil
                         time
                         :timezone local-time:+utc-zone+)
                        (format nil "attachment://~a.~a"
