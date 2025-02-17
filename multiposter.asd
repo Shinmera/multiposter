@@ -18,8 +18,8 @@
                (:file "main")
                (:module "clients"
                 :components ((:file "dummy")
-                             (:file "bsky")
                              (:file "cohost")
+                             (:file "discord")
                              (:file "file")
                              (:file "git")
                              (:file "lichat")
