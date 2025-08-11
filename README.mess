@@ -9,11 +9,11 @@ The following services are supported:
 - "Cohost"(https://cohost.org)
 - File (just writes to disk)
 - Git (commits and pushes)
-- "Lichat"(https://shirakumo.github.io/lichat)
+- "Lichat"(https://shirakumo.org/docs/lichat)
 - "Mastodon"(https://mastodon.social)
 - "Pixiv"(https://pixiv.net)
-- "Reader"(https://github.com/shirakumo/reader)
-- "Studio"(https://github.com/shirakumo/studio)
+- "Reader"(https://shirakumo.org/project/reader)
+- "Studio"(https://shirakumo.org/project/studio)
 - "Tumblr"(https://tumblr.com)
 - WebDAV
 

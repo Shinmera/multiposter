@@ -4,9 +4,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "An application to post to multiple services at once."
-  :homepage "https://shinmera.github.io/multiposter/"
-  :bug-tracker "https://github.com/shinmera/multiposter/issues"
-  :source-control (:git "https://github.com/shinmera/multiposter.git")
+  :homepage "https://shinmera.com/docs/multiposter/"
+  :bug-tracker "https://shinmera.com/project/multiposter/issues"
+  :source-control (:git "https://shinmera.com/project/multiposter.git")
   :build-operation "program-op"
   :build-pathname "multiposter"
   :entry-point "org.shirakumo.multiposter::main"
