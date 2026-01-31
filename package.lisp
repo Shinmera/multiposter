@@ -85,6 +85,7 @@
   ;; clients
   (:export
    #:cohost
+   #:discord
    #:dummy
    #:file
    #:git
