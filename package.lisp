@@ -84,6 +84,7 @@
    #:path-url)
   ;; clients
   (:export
+   #:bluesky
    #:cohost
    #:dummy
    #:file
